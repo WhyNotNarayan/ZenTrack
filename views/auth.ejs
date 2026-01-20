@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <title>ZenTrack | Welcome</title>
+</head>
+<body class="d-flex align-items-center justify-content-center">
+
+  <div class="auth-wrapper">
+    <% if (error) { %>
+      <div class="alert alert-custom animate-fade-in"><%= error %></div>
+    <% } %>
+
+    <div class="flip-card" id="flipCard">
+      <div class="flip-card-inner">
+        
+        <div class="flip-card-front card-glass">
+          <div class="brand-section">
+            <h1 class="brand-logo">Zen<span>Track</span></h1>
+            <p class="subtitle">Welcome back! Please login.</p>
+          </div>
+
+          <div class="mascot-container">
+            <div class="eye"><div class="pupil"></div></div>
+            <div class="eye"><div class="pupil"></div></div>
+          </div>
+
+          <form action="/login" method="POST" class="auth-form">
+            <div class="input-group-modern">
+              <input type="email" name="email" placeholder="Email Address" required>
+            </div>
+            <div class="input-group-modern">
+              <input type="password" name="password" class="password-field" placeholder="Password" required>
+            </div>
+            <button type="submit" class="btn-modern mt-3">Sign In</button>
+          </form>
+          
+          <div class="footer-link">
+            <span>New here?</span> <a href="#" onclick="flip()">Create an account</a>
+          </div>
+        </div>
+
+        <div class="flip-card-back card-glass">
+          <div class="brand-section">
+            <h1 class="brand-logo">Zen<span>Track</span></h1>
+            <p class="subtitle">Join the community today.</p>
+          </div>
+
+          <div class="mascot-container">
+            <div class="eye"><div class="pupil"></div></div>
+            <div class="eye"><div class="pupil"></div></div>
+          </div>
+
+          <form action="/signup" method="POST" class="auth-form">
+            <input type="email" name="email" class="form-control-modern" placeholder="Email" required>
+            <input type="text" name="username" class="form-control-modern" placeholder="Username" required>
+            <input type="password" name="password" class="form-control-modern password-field" placeholder="Password" required>
+            <input type="tel" name="mobile" class="form-control-modern" placeholder="Mobile Number" required>
+            <button type="submit" class="btn-modern mt-3">Get Started</button>
+          </form>
+
+          <div class="footer-link">
+            <span>Already a member?</span> <a href="#" onclick="flip()">Login</a>
+          </div>
+        </div>
+        <body class="d-flex align-items-center justify-content-center">
+            <div class="bg-animations">
+              <div class="blob blob-1"></div>
+              <div class="blob blob-2"></div>
+              <div class="blob blob-3"></div>
+            </div>
+          
+            <div class="auth-wrapper">
+            </div>
+          </body>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function flip() {
+      document.getElementById('flipCard').classList.toggle('flipped');
+    }
+
+    // Modernized Eye Following Logic
+    document.addEventListener('mousemove', (e) => {
+      const pupils = document.querySelectorAll('.pupil');
+      pupils.forEach(pupil => {
+        const rect = pupil.parentElement.getBoundingClientRect();
+        const eyeX = rect.left + rect.width / 2;
+        const eyeY = rect.top + rect.height / 2;
+        const angle = Math.atan2(e.clientY - eyeY, e.clientX - eyeX);
+        const distance = 8; // Movement range
+        
+        const x = Math.cos(angle) * distance;
+        const y = Math.sin(angle) * distance;
+        
+        pupil.style.transform = `translate(${x}px, ${y}px)`;
+      });
+    });
+
+    // Handle Password Focus (Blink/Close effect)
+    document.querySelectorAll('.password-field').forEach(field => {
+      field.addEventListener('focus', () => {
+        document.querySelectorAll('.eye').forEach(eye => eye.classList.add('closed'));
+      });
+      field.addEventListener('blur', () => {
+        document.querySelectorAll('.eye').forEach(eye => eye.classList.remove('closed'));
+      });
+    });
+  </script>
+</body>
+</html>
