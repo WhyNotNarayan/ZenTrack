@@ -71,36 +71,47 @@ async function initDailyTracks(date, userId) {
   }
 }
 
-// Signup
-app.get('/signup', (req, res) => {
-  res.render('signup', { error: req.query.error });
+// Auth page (combined login/signup)
+app.get('/auth', (req, res) => {
+  res.render('auth', { error: req.session.messages ? req.session.messages[0] : null });
 });
 
+// Signup
 app.post('/signup', async (req, res) => {
   try {
-    const { username, password } = req.body;
-    const existingUser = await User.findOne({ username });
-    if (existingUser) return res.redirect('/signup?error=Username already exists');
+    const { email, username, password, mobile } = req.body;
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    if (existingUser) return res.redirect('/auth?error=Email or username already exists');
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ username, password: hashedPassword });
+    const newUser = new User({ email, username, password: hashedPassword, mobile });
     await newUser.save();
-    res.redirect('/login');
+    res.redirect('/auth');
   } catch (err) {
-    res.redirect('/signup?error=Signup failed');
+    res.redirect('/auth?error=Signup failed');
   }
 });
 
 // Login
-app.get('/login', (req, res) => {
-  res.render('login', { error: req.session.messages ? req.session.messages[0] : null });
-});
-
 app.post('/login', passport.authenticate('local', {
   successRedirect: '/',
-  failureRedirect: '/login',
+  failureRedirect: '/auth',
   failureMessage: true
 }));
 
+// Update passport to use email
+passport.use(new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return done(null, false, { message: 'Incorrect email' });
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return done(null, false, { message: 'Incorrect password' });
+    return done(null, user);
+  } catch (err) { return done(err); }
+}));
+
+// Redirect old /login and /signup to /auth
+app.get('/login', (req, res) => res.redirect('/auth'));
+app.get('/signup', (req, res) => res.redirect('/auth'));
 // Logout
 app.get('/logout', (req, res, next) => {
   req.logout((err) => {
