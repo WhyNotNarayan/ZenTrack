@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <title>ZenTrack - Set Goals</title>
+</head>
+<body class="container mt-5">
+  <h1>ZenTrack - Set Daily Goals</h1>
+  <form action="/goals" method="POST">
+    <input type="text" name="name" class="form-control mb-2" placeholder="e.g., Wake up" required>
+<input type="time" name="time" class="form-control mb-2" placeholder="Time (optional)">
+    <button type="submit" class="btn btn-primary mt-2">Add Goal</button>
+  </form>
+  <ul class="list-group mt-4">
+    <% goals.forEach(goal => { %>
+      <li class="list-group-item"><%= goal.name %></li>
+    <% }) %>
+  </ul>
+  <a href="/" class="btn btn-secondary mt-3">Go to Tracker</a>
+  <a href="/logout" class="btn btn-danger mt-3">Logout</a>
+</body>
+</html>
