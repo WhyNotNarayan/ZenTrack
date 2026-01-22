@@ -1,4 +1,4 @@
-require('dotenv').config(); // ✅ Add this at the very top for .env support
+require('dotenv').config(); // ✅ .env support
 
 const express = require('express');
 const mongoose = require('mongoose');
@@ -23,7 +23,6 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('DB Connected'))
   .catch(err => console.log(err));
 
-  
 // Session config
 app.use(session({
   secret: process.env.SESSION_SECRET,
@@ -112,6 +111,7 @@ passport.use(new LocalStrategy({ usernameField: 'email' }, async (email, passwor
 // Redirect old /login and /signup to /auth
 app.get('/login', (req, res) => res.redirect('/auth'));
 app.get('/signup', (req, res) => res.redirect('/auth'));
+
 // Logout
 app.get('/logout', (req, res, next) => {
   req.logout((err) => {
@@ -120,55 +120,69 @@ app.get('/logout', (req, res, next) => {
   });
 });
 
-// Home/Tracker
+// Theme middleware (only once)
+app.use((req, res, next) => {
+  if (req.session) {
+    req.session.theme = req.session.theme || 'light';
+  }
+  next();
+});
+
+// Toggle theme
+app.get('/toggle-theme', isAuthenticated, (req, res) => {
+  if (req.session) {
+    req.session.theme = req.session.theme === 'light' ? 'dark' : 'light';
+  }
+  res.redirect(req.headers.referer || '/');
+});
+
+// Home route
 app.get('/', isAuthenticated, async (req, res) => {
   const today = moment().startOf('day').toDate();
   const goals = await Goal.find({ user: req.user._id });
-  const tracks = await DailyTrack.find({ date: today, user: req.user._id });
-  const isPast = moment(today).isBefore(moment().startOf('day'));
+  const tracks = await DailyTrack.find({ user: req.user._id });
+
+  // Monthly data
+  const currentMonth = moment().startOf('month');
+  const monthEnd = moment().endOf('month');
+  const dates = [];
+  for (let d = currentMonth.clone(); d.isSameOrBefore(monthEnd, 'day'); d.add(1, 'day')) {
+    dates.push(d.toDate());
+  }
+
+  // Completion % for circle chart
+  const totalPossible = goals.length * dates.length;
+  const completed = tracks.filter(t => t.completed).length;
+  const progress = totalPossible > 0 ? (completed / totalPossible) * 100 : 0;
+
+  const isPast = (date) => moment(date).isBefore(moment().startOf('day'));
+
   await initDailyTracks(today, req.user._id);
-  res.render('tracker', { goals, tracks, date: today, moment, isPast });
+  res.render('tracker', {
+    goals,
+    tracks,
+    date: today,
+    moment,
+    isPast,
+    user: req.user,
+    theme: req.session.theme,
+    currentMonth: currentMonth.format('MMMM YYYY'),
+    dates,
+    progress: JSON.stringify(progress)
+  });
 });
 
-// Goals
-app.get('/goals', isAuthenticated, async (req, res) => {
-  const goals = await Goal.find({ user: req.user._id });
-  res.render('goals', { goals });
-});
-
-app.post('/goals', isAuthenticated, async (req, res) => {
-  const { name, time } = req.body;
-  const newGoal = new Goal({ name, time, user: req.user._id });
-  await newGoal.save();
-  res.redirect('/goals');
-});
-
-// Update Tracker
+// POST /tracker
 app.post('/tracker', isAuthenticated, async (req, res) => {
-  const today = moment().startOf('day').toDate();
-  if (moment(today).isBefore(moment().startOf('day'))) return res.redirect('/');
-  const { goalId, completed } = req.body;
+  const { date: selectedDate, goalId, completed } = req.body;
+  const trackDate = moment(selectedDate || moment().format('YYYY-MM-DD')).startOf('day').toDate();
+  if (moment(trackDate).isBefore(moment().startOf('day'))) return res.redirect('/');
   await DailyTrack.findOneAndUpdate(
-    { date: today, goal: goalId, user: req.user._id },
+    { date: trackDate, goal: goalId, user: req.user._id },
     { completed: completed === 'on' },
     { upsert: true }
   );
   res.redirect('/');
-});
-
-// Analytics
-app.get('/analytics', isAuthenticated, async (req, res) => {
-  const goals = await Goal.find({ user: req.user._id });
-  const tracks = await DailyTrack.aggregate([
-    { $match: { user: req.user._id } },
-    { $group: { _id: { date: { $dateToString: { format: '%Y-%m-%d', date: '$date' } }, goal: '$goal' }, completed: { $sum: { $cond: ['$completed', 1, 0] } } } }
-  ]);
-  const dates = [...new Set(tracks.map(t => t._id.date))].sort();
-  const data = goals.map(goal => ({
-    label: goal.name,
-    data: dates.map(date => tracks.find(t => t._id.date === date && t._id.goal.toString() === goal._id.toString())?.completed || 0)
-  }));
-  res.render('analytics', { dates: JSON.stringify(dates), data: JSON.stringify(data) });
 });
 
 // Server listen
