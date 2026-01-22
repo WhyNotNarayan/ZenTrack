@@ -1,31 +1,102 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="<%= theme || 'light' %>">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css">
-  <title>ZenTrack - Daily Tracker</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="/dashboard.css">
+  <title>ZenTrack - Monthly Tracker</title>
 </head>
-<body class="container mt-5">
-  <h1>ZenTrack - Today's Goals (<%= moment(date).format('YYYY-MM-DD') %>)</h1>
-  <% if (isPast) { %>
-    <p class="alert alert-warning">This date has passed—cannot edit.</p>
-  <% } %>
-  <form action="/tracker" method="POST">
-    <ul class="list-group">
-      <% goals.forEach(goal => { %>
-        <li class="list-group-item">
-          <input type="checkbox" name="completed" <%= tracks.find(t => t.goal.toString() === goal._id.toString())?.completed ? 'checked' : '' %> <%= isPast ? 'disabled' : '' %>>
-          <input type="hidden" name="goalId" value="<%= goal._id %>">
-          <%= goal.name %>
-        </li>
-      <% }) %>
-    </ul>
-    <% if (!isPast) { %>
-      <button type="submit" class="btn btn-success mt-3">Save Changes</button>
-    <% } %>
-  </form>
-  <a href="/analytics" class="btn btn-info mt-3">View Analytics</a>
-  <a href="/goals" class="btn btn-secondary mt-3">Manage Goals</a>
-  <a href="/logout" class="btn btn-danger mt-3">Logout</a>
+<body class="dashboard-body">
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2 class="brand-logo">Zen<span>Track</span></h2>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="/" class="nav-item active"><i class="fas fa-calendar-check"></i> Tracker</a>
+      <a href="/goals" class="nav-item"><i class="fas fa-plus-circle"></i> Manage Goals</a>
+      <a href="/analytics" class="nav-item"><i class="fas fa-chart-pie"></i> Analytics</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <span><%= user.username.charAt(0).toUpperCase() %></span>
+        <div>
+          <p class="u-name"><%= user.username %></p>
+          <a href="/logout" class="logout-link">Logout</a>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+ <main class="main-content">
+  <header class="top-bar">
+    <h1><%= currentMonth %> Tracker</h1>
+    <div id="liveClock"></div>
+  </header>
+
+  <div class="grid-container-card">
+    <div class="table-responsive grid-viewport">
+      <table class="zen-grid">
+        <thead>
+          <tr class="day-label-row">
+            <th class="corner-label">GOALS</th>
+            <th colspan="<%= dates.length %>" class="main-day-header">DAY</th>
+          </tr>
+          <tr class="date-number-row">
+            <th class="sticky-goal-header"></th> <% dates.forEach(date => { %>
+              <th class="date-col-header">
+                <%= moment(date).format('D') %>
+              </th>
+            <% }) %>
+          </tr>
+        </thead>
+        <tbody>
+          <% goals.forEach(goal => { %>
+            <tr>
+              <td class="sticky-goal-column">
+                <div class="goal-name-wrapper">
+                  <%= goal.name %>
+                </div>
+              </td>
+
+              <% dates.forEach(date => { 
+                const track = tracks.find(t => 
+                  t.goal.toString() === goal._id.toString() && 
+                  moment(t.date).isSame(date, 'day')
+                ); 
+              %>
+                <td class="grid-checkbox-cell">
+                  <form action="/tracker" method="POST">
+                    <input type="hidden" name="date" value="<%= moment(date).format('YYYY-MM-DD') %>">
+                    <input type="hidden" name="goalId" value="<%= goal._id %>">
+                    <label class="grid-check">
+                      <input type="checkbox" name="completed" 
+                        <%= track && track.completed ? 'checked' : '' %>
+                        <%= isPast(date) ? 'disabled' : '' %>
+                        onchange="this.form.submit()">
+                      <span class="checkmark-ui"></span>
+                    </label>
+                  </form>
+                </td>
+              <% }) %>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+  <script>
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('liveClock').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + ' | ' + now.toLocaleTimeString();
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
 </body>
 </html>
