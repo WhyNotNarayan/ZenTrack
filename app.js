@@ -172,17 +172,37 @@ app.get('/', isAuthenticated, async (req, res) => {
   });
 });
 
+// ... keep all your existing requires and setup above
+
+// Manage Goals page
+app.get('/goals', isAuthenticated, async (req, res) => {
+  const goals = await Goal.find({ user: req.user._id });
+  res.render('goals', { goals, user: req.user, theme: req.session.theme });
+});
+
+// Add a new goal
+app.post('/goals', isAuthenticated, async (req, res) => {
+  const { name, time } = req.body;
+  await new Goal({ name, time, user: req.user._id }).save();
+  res.redirect('/goals');
+});
+
 // POST /tracker
-app.post('/tracker', isAuthenticated, async (req, res) => {
-  const { date: selectedDate, goalId, completed } = req.body;
-  const trackDate = moment(selectedDate || moment().format('YYYY-MM-DD')).startOf('day').toDate();
-  if (moment(trackDate).isBefore(moment().startOf('day'))) return res.redirect('/');
-  await DailyTrack.findOneAndUpdate(
-    { date: trackDate, goal: goalId, user: req.user._id },
-    { completed: completed === 'on' },
-    { upsert: true }
-  );
-  res.redirect('/');
+app.post('/goals', isAuthenticated, async (req, res) => {
+  const { name, time } = req.body;
+  await new Goal({ name, time, user: req.user._id }).save();
+  res.redirect('/goals');
+});
+
+app.post('/goals/delete/:id', isAuthenticated, async (req, res) => {
+  try {
+    const goalId = req.params.id;
+    await Goal.findByIdAndDelete(goalId);
+    res.redirect('/goals');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error deleting goal');
+  }
 });
 
 // Server listen
