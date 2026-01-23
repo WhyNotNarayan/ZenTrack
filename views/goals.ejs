@@ -1,23 +1,84 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="<%= theme || 'light' %>">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css">
-  <title>ZenTrack - Set Goals</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/goals.css">
+  <title>ZenTrack - Manage Goals</title>
 </head>
-<body class="container mt-5">
-  <h1>ZenTrack - Set Daily Goals</h1>
-  <form action="/goals" method="POST">
-    <input type="text" name="name" class="form-control mb-2" placeholder="e.g., Wake up" required>
-<input type="time" name="time" class="form-control mb-2" placeholder="Time (optional)">
-    <button type="submit" class="btn btn-primary mt-2">Add Goal</button>
-  </form>
-  <ul class="list-group mt-4">
-    <% goals.forEach(goal => { %>
-      <li class="list-group-item"><%= goal.name %></li>
-    <% }) %>
-  </ul>
-  <a href="/" class="btn btn-secondary mt-3">Go to Tracker</a>
-  <a href="/logout" class="btn btn-danger mt-3">Logout</a>
+<body class="dashboard-body">
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2 class="brand-logo">Zen<span>Track</span></h2>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="/" class="nav-item"><i class="fas fa-th-large"></i> Dashboard</a>
+      <a href="/goals" class="nav-item active"><i class="fas fa-bullseye"></i> Manage Goals</a>
+      <a href="/analytics" class="nav-item"><i class="fas fa-chart-line"></i> Analytics</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="/logout" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="goal-header">
+      <div class="header-text">
+        <h1>Manage Your Goals</h1>
+        <p class="motto">Add your goals here and fulfill your dream.</p>
+      </div>
+      <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> Back to Tracker</a>
+    </header>
+
+    <div class="goals-container">
+      <div class="glass-card form-section">
+        <h3>Create New Goal</h3>
+        <form action="/goals" method="POST" class="modern-form">
+          <div class="input-group-custom">
+            <i class="fas fa-pencil-alt"></i>
+            <input type="text" name="name" placeholder="e.g., Morning Meditation" required>
+          </div>
+          <div class="input-group-custom">
+            <i class="fas fa-clock"></i>
+            <input type="time" name="time">
+          </div>
+          <button type="submit" class="btn-add-goal">
+            <i class="fas fa-plus"></i> Set Goal
+          </button>
+        </form>
+      </div>
+
+      <div class="goals-list-section">
+        <h3>Your Current Routine</h3>
+        <div class="goals-grid">
+          <% if (goals.length > 0) { %>
+            <% goals.forEach(goal => { %>
+              <div class="goal-card">
+                <div class="goal-icon">
+                  <i class="fas fa-star"></i>
+                </div>
+                <div class="goal-info">
+                  <span class="g-name"><%= goal.name %></span>
+                  <span class="g-time"><%= goal.time || 'Flexible Time' %></span>
+                </div>
+                <form action="/goals/delete/<%= goal._id %>" method="POST" class="ms-auto">
+                   <button type="submit" class="btn-delete"><i class="far fa-trash-alt"></i></button>
+                </form>
+              </div>
+            <% }) %>
+          <% } else { %>
+            <div class="empty-state">
+              <i class="fas fa-clipboard-list"></i>
+              <p>No goals set yet. Start by adding one above!</p>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </main>
+
 </body>
 </html>
