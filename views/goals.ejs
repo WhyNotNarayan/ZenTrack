@@ -64,9 +64,12 @@
                   <span class="g-name"><%= goal.name %></span>
                   <span class="g-time"><%= goal.time || 'Flexible Time' %></span>
                 </div>
-                <form action="/goals/delete/<%= goal._id %>" method="POST" class="ms-auto">
-                   <button type="submit" class="btn-delete"><i class="far fa-trash-alt"></i></button>
-                </form>
+                <div class="goal-actions">
+                  <a href="/goals/edit/<%= goal._id %>" class="btn-edit"><i class="fas fa-pencil-alt"></i></a>
+                  <form action="/goals/delete/<%= goal._id %>" method="POST" class="ms-auto">
+                    <button type="submit" class="btn-delete"><i class="far fa-trash-alt"></i></button>
+                  </form>
+                </div>
               </div>
             <% }) %>
           <% } else { %>
@@ -79,6 +82,22 @@
       </div>
     </div>
   </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const currentPath = window.location.pathname;
+
+      window.addEventListener('popstate', () => {
+        if (currentPath === '/goals') {
+          // Redirect to the dashboard page when back button is clicked from Manage Goals
+          window.location.href = '/';
+        } else if (currentPath === '/') {
+          // Redirect to the auth page when back button is clicked from the dashboard
+          window.location.href = '/auth';
+        }
+      });
+    });
+  </script>
 
 </body>
 </html>
