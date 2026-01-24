@@ -205,6 +205,47 @@ app.post('/goals/delete/:id', isAuthenticated, async (req, res) => {
   }
 });
 
+// Route to render the edit goal page
+app.get('/goals/edit/:id', isAuthenticated, async (req, res) => {
+  try {
+    const goalId = req.params.id;
+    const goal = await Goal.findById(goalId);
+    if (!goal) {
+      return res.status(404).send('Goal not found');
+    }
+    res.render('editgoal', { goal, user: req.user, theme: req.session.theme });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error retrieving goal');
+  }
+});
+
+// Route to handle the edit goal form submission
+app.post('/goals/edit/:id', isAuthenticated, async (req, res) => {
+  try {
+    const goalId = req.params.id;
+    const { name, time } = req.body;
+    await Goal.findByIdAndUpdate(goalId, { name, time });
+    res.redirect('/goals');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error updating goal');
+  }
+});
+
+//checkbox post/tracker
+app.post('/tracker', isAuthenticated, async (req, res) => {
+  const { date: selectedDate, goalId, completed } = req.body;
+  const trackDate = moment(selectedDate || moment().format('YYYY-MM-DD')).startOf('day').toDate();
+  if (moment(trackDate).isBefore(moment().startOf('day'))) return res.redirect('/');
+  await DailyTrack.findOneAndUpdate(
+    { date: trackDate, goal: goalId, user: req.user._id },
+    { completed: completed === 'on' },
+    { upsert: true }
+  );
+  res.redirect('/');
+});
+
 // Server listen
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`ZenTrack running on port ${port}`));
