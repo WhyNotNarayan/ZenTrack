@@ -63,19 +63,20 @@
     </td>
 
     <% dates.forEach(date => { 
+      const isDisabled = moment(date).isBefore(moment().subtract(1, 'day').startOf('day')) || moment(date).isAfter(moment().startOf('day'));
       const track = tracks.find(t => 
         t.goal && t.goal.toString() === goal._id.toString() && 
         moment(t.date).isSame(date, 'day')
       ); 
     %>
-      <td class="grid-checkbox-cell">
+      <td class="grid-checkbox-cell" style="background-color: <%= isDisabled ? '#d3d3d3' : 'transparent' %>">
         <form action="/tracker" method="POST">
           <input type="hidden" name="date" value="<%= moment(date).format('YYYY-MM-DD') %>">
           <input type="hidden" name="goalId" value="<%= goal._id %>">
           <label class="grid-check">
             <input type="checkbox" name="completed" 
               <%= track && track.completed ? 'checked' : '' %>
-              <%= isPast(date) ? 'disabled' : '' %>
+              <%= isDisabled ? 'disabled' : '' %>
               onchange="this.form.submit()">
             <span class="checkmark-ui"></span>
           </label>
