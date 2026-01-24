@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="<%= theme || 'light' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/goals.css">
+  <title>Edit Goal</title>
+</head>
+<body class="dashboard-body">
+
+  <main class="main-content">
+    <header class="goal-header">
+      <div class="header-text">
+        <h1>Edit Goal</h1>
+        <p class="motto">Modify your goal details below.</p>
+      </div>
+      <a href="/goals" class="back-link"><i class="fas fa-arrow-left"></i> Back to Goals</a>
+    </header>
+
+    <div class="glass-card form-section">
+      <form action="/goals/edit/<%= goal._id %>" method="POST" class="modern-form">
+        <div class="input-group-custom">
+          <i class="fas fa-pencil-alt"></i>
+          <input type="text" name="name" value="<%= goal.name %>" placeholder="Goal Name" required>
+        </div>
+        <div class="input-group-custom">
+          <i class="fas fa-clock"></i>
+          <input type="time" name="time" value="<%= goal.time %>">
+        </div>
+        <button type="submit" class="btn-add-goal">
+          <i class="fas fa-save"></i> Save Changes
+        </button>
+      </form>
+    </div>
+  </main>
+
+</body>
+</html>
