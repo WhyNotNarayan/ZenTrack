@@ -92,12 +92,19 @@
 </main>
 
   <script>
-    function updateClock() {
-      const now = new Date();
-      document.getElementById('liveClock').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + ' | ' + now.toLocaleTimeString();
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-  </script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const currentPath = window.location.pathname;
+
+    window.addEventListener('popstate', () => {
+      if (currentPath === '/') {
+        // Redirect to the auth page when back button is clicked from the tracker page
+        window.location.href = '/auth';
+      }
+    });
+
+    // Push the current state to the history stack to ensure the back button works as expected
+    history.pushState(null, '', currentPath);
+  });
+</script>
 </body>
 </html>
