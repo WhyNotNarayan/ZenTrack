@@ -237,12 +237,18 @@ app.post('/goals/edit/:id', isAuthenticated, async (req, res) => {
 app.post('/tracker', isAuthenticated, async (req, res) => {
   const { date: selectedDate, goalId, completed } = req.body;
   const trackDate = moment(selectedDate || moment().format('YYYY-MM-DD')).startOf('day').toDate();
-  if (moment(trackDate).isBefore(moment().startOf('day'))) return res.redirect('/');
+
+  // Allow saving for today and the past day
+  if (moment(trackDate).isBefore(moment().subtract(1, 'day').startOf('day'))) {
+    return res.redirect('/');
+  }
+
   await DailyTrack.findOneAndUpdate(
     { date: trackDate, goal: goalId, user: req.user._id },
     { completed: completed === 'on' },
     { upsert: true }
   );
+
   res.redirect('/');
 });
 
