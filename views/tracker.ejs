@@ -105,6 +105,17 @@
     // Push the current state to the history stack to ensure the back button works as expected
     history.pushState(null, '', currentPath);
   });
-</script>
+
+  function updateClock() {
+    const now = new Date();
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const dateString = now.toLocaleDateString('en-US', options);
+    const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    document.getElementById('liveClock').innerHTML = `${dateString} | ${timeString}`;
+  }
+
+  setInterval(updateClock, 1000);
+  updateClock(); // Initialize immediately
+  </script>
 </body>
 </html>
