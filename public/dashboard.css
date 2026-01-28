@@ -210,3 +210,30 @@
   }
   
   .theme-btn:hover { background: var(--primary); color: white; }
+
+#liveClock {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--primary);
+  text-align: center;
+  animation: fadeIn 1s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Add a glowing effect to the clock */
+#liveClock {
+  text-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary), 0 0 30px var(--primary);
+}
+
+/* Add a smooth transition for time updates */
+#liveClock {
+  transition: all 0.3s ease-in-out;
+}
