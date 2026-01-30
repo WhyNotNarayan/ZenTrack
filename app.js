@@ -158,6 +158,21 @@ app.get('/', isAuthenticated, async (req, res) => {
   const isPast = (date) => moment(date).isBefore(moment().startOf('day'));
 
   await initDailyTracks(today, req.user._id);
+
+  const data = [
+    {
+      label: 'Goal Completion',
+      data: dates.map(date => {
+        const tracksForDate = tracks.filter(t => moment(t.date).isSame(date, 'day'));
+        const completedTracks = tracksForDate.filter(t => t.completed).length;
+        return completedTracks;
+      }),
+      borderColor: '#6366f1',
+      backgroundColor: 'rgba(99, 102, 241, 0.2)',
+      fill: true
+    }
+  ];
+
   res.render('tracker', {
     goals,
     tracks,
@@ -168,7 +183,8 @@ app.get('/', isAuthenticated, async (req, res) => {
     theme: req.session.theme,
     currentMonth: currentMonth.format('MMMM YYYY'),
     dates,
-    progress: JSON.stringify(progress)
+    progress: JSON.stringify(progress),
+    data
   });
 });
 
@@ -250,6 +266,33 @@ app.post('/tracker', isAuthenticated, async (req, res) => {
   );
 
   res.redirect('/');
+});
+
+// Analytics route
+app.get('/analytics', isAuthenticated, async (req, res) => {
+  const today = moment().startOf('day').toDate();
+  const tracks = await DailyTrack.find({ user: req.user._id });
+
+  console.log('Fetched DailyTrack entries:', tracks);
+
+  // Generate data for the chart
+  const data = tracks.reduce((acc, track) => {
+    const date = moment(track.date).format('YYYY-MM-DD');
+    acc[date] = (acc[date] || 0) + (track.completed ? 1 : 0);
+    return acc;
+  }, {});
+
+  console.log('Tracks:', tracks);
+  console.log('Dates:', Object.keys(data));
+  console.log('Data:', Object.values(data));
+
+  const completedCount = tracks.filter(track => track.completed).length;
+  const notCompletedCount = tracks.length - completedCount;
+
+  res.render('analytics', {
+    completedCount,
+    notCompletedCount
+  });
 });
 
 // Server listen
