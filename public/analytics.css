@@ -1,0 +1,89 @@
+/* Reuse the same Root as the Tracker for consistency */
+:root {
+  --primary: #6366f1;
+  --bg-app: #f1f5f9;
+  --bg-card: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --sidebar-w: 260px;
+  --shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+}
+
+body.analytics-body {
+  background: var(--bg-app);
+  color: var(--text-main);
+  display: flex;
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+}
+
+/* Sidebar reuse from Tracker */
+.sidebar {
+  width: var(--sidebar-w);
+  height: 100vh;
+  position: fixed;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  z-index: 1000;
+}
+
+.main-content {
+  margin-left: var(--sidebar-w);
+  flex-grow: 1;
+  padding: 2.5rem;
+  width: calc(100% - var(--sidebar-w));
+  animation: fadeIn 0.8s ease-out;
+}
+
+/* Dashboard Grid */
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.chart-card {
+  background: var(--bg-card);
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: transform 0.3s ease;
+}
+
+.chart-card:hover {
+  transform: translateY(-5px);
+}
+
+.chart-card h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Special sizing for the Pie Chart to keep it from getting too huge */
+.pie-wrapper {
+  max-width: 350px;
+  margin: 0 auto;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .sidebar { width: 80px; padding: 1rem; }
+  .sidebar span, .sidebar p, .brand-logo span, .u-name { display: none; }
+  .main-content { margin-left: 80px; width: calc(100% - 80px); }
+  .analytics-grid { grid-template-columns: 1fr; }
+}
