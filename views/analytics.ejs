@@ -13,12 +13,16 @@
 
   <aside class="sidebar">
     <div class="sidebar-header">
-      <h2 class="brand-logo" style="font-weight:800; color:var(--text-main);">Zen<span style="color:#6366f1;">Track</span></h2>
+      <h2 class="brand-logo" style="font-weight:800; color:var(--text-main);">
+        Zen<span style="color:#6366f1;">Track</span>
+      </h2>
     </div>
     <nav class="nav flex-column mt-4">
       <a href="/" class="nav-link text-muted mb-2"><i class="fas fa-calendar-check me-2"></i> <span>Tracker</span></a>
       <a href="/goals" class="nav-link text-muted mb-2"><i class="fas fa-plus-circle me-2"></i> <span>Manage Goals</span></a>
-      <a href="/analytics" class="nav-link active fw-bold mb-2" style="color:#6366f1; background: rgba(99,102,241,0.1); border-radius:10px;"><i class="fas fa-chart-pie me-2"></i> <span>Analytics</span></a>
+      <a href="/analytics" class="nav-link active fw-bold mb-2" style="color:#6366f1; background: rgba(99,102,241,0.1); border-radius:10px;">
+        <i class="fas fa-chart-pie me-2"></i> <span>Analytics</span>
+      </a>
     </nav>
   </aside>
 
@@ -53,73 +57,73 @@
     </div>
   </main>
 
-  <script>
-    const labels = <%= JSON.stringify(dates) %>;
-    const dataValues = <%= JSON.stringify(data) %>;
+ <script>
+  const labels = <%- dates %>;
+  const dataValues = <%- dataValues %>;
 
-    // Line Chart - Modern Gradient Style
-    new Chart(document.getElementById('lineChart'), {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Completed Tasks',
-          data: dataValues,
-          borderColor: '#6366f1',
-          backgroundColor: 'rgba(99, 102, 241, 0.1)',
-          fill: true,
-          tension: 0.4, // Curves the line
-          pointRadius: 4,
-          pointBackgroundColor: '#6366f1'
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { beginAtZero: true, grid: { display: false } },
-          x: { grid: { display: false } }
-        }
+  // Line Chart
+  new Chart(document.getElementById('lineChart'), {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Completed Tasks',
+        data: dataValues,
+        borderColor: '#6366f1',
+        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: '#6366f1'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: { display: false } },
+        x: { grid: { display: false } }
       }
-    });
+    }
+  });
 
-    // Bar Chart
-    new Chart(document.getElementById('columnChart'), {
-      type: 'bar',
-      data: {
-        labels: labels,
-        datasets: [{
-          data: dataValues,
-          backgroundColor: '#6366f1',
-          borderRadius: 8
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { beginAtZero: true, border: {display: false} },
-          x: { border: {display: false} }
-        }
+  // Bar Chart
+  new Chart(document.getElementById('columnChart'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: dataValues,
+        backgroundColor: '#6366f1',
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, border: { display: false } },
+        x: { border: { display: false } }
       }
-    });
+    }
+  });
 
-    // Pie Chart
-    new Chart(document.getElementById('pieChart'), {
-      type: 'doughnut', // Doughnut looks more modern than Pie
-      data: {
-        labels: ['Completed', 'Remaining'],
-        datasets: [{
-          data: [dataValues.reduce((a, b) => a + b, 0), 10], // Example comparison
-          backgroundColor: ['#6366f1', '#e2e8f0'],
-          borderWidth: 0
-        }]
-      },
-      options: {
-        cutout: '70%',
-        plugins: { legend: { position: 'bottom' } }
-      }
-    });
-  </script>
+  // Pie Chart
+  new Chart(document.getElementById('pieChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Completed', 'Remaining'],
+      datasets: [{
+        data: [<%= completedCount %>, <%= notCompletedCount %>],
+        backgroundColor: ['#6366f1', '#e2e8f0'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      cutout: '70%',
+      plugins: { legend: { position: 'bottom' } }
+    }
+  });
+</script>
 </body>
 </html>
