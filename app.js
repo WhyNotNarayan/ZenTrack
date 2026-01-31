@@ -270,26 +270,27 @@ app.post('/tracker', isAuthenticated, async (req, res) => {
 
 // Analytics route
 app.get('/analytics', isAuthenticated, async (req, res) => {
-  const today = moment().startOf('day').toDate();
+  const goals = await Goal.find({ user: req.user._id });
   const tracks = await DailyTrack.find({ user: req.user._id });
 
-  console.log('Fetched DailyTrack entries:', tracks);
+  // Get unique dates from tracks
+  const dates = [...new Set(tracks.map(t => moment(t.date).format('YYYY-MM-DD')))].sort();
 
-  // Generate data for the chart
-  const data = tracks.reduce((acc, track) => {
-    const date = moment(track.date).format('YYYY-MM-DD');
-    acc[date] = (acc[date] || 0) + (track.completed ? 1 : 0);
-    return acc;
-  }, {});
+  // Calculate % completion per day (for line and bar - growth)
+  const dataValues = dates.map(date => {
+    const tracksForDate = tracks.filter(t => moment(t.date).format('YYYY-MM-DD') === date);
+    const completedForDate = tracksForDate.filter(t => t.completed).length;
+    const percent = goals.length > 0 ? (completedForDate / goals.length * 100) : 0;
+    return percent.toFixed(2); // % per day
+  });
 
-  console.log('Tracks:', tracks);
-  console.log('Dates:', Object.keys(data));
-  console.log('Data:', Object.values(data));
-
-  const completedCount = tracks.filter(track => track.completed).length;
+  // Overall completed and not completed (for pie)
+  const completedCount = tracks.filter(t => t.completed).length;
   const notCompletedCount = tracks.length - completedCount;
 
   res.render('analytics', {
+    dates: JSON.stringify(dates),
+    dataValues: JSON.stringify(dataValues),
     completedCount,
     notCompletedCount
   });
