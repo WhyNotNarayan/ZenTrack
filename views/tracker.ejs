@@ -8,50 +8,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="/dashboard.css">
   <title>ZenTrack - Monthly Tracker</title>
-  <style>
-    /* Scrollbars */
-    html, body {
-      height: 100%;
-      overflow-x: auto;
-      overflow-y: auto;
-    }
-    .grid-viewport {
-      overflow-x: auto;
-    }
-
-    /* Sidebar */
-    .sidebar {
-      width: 250px;
-      min-height: 100vh;
-      background: #fff;
-      position: fixed;
-      left: 0;
-      top: 0;
-      transition: transform 0.3s ease-in-out;
-      z-index: 1000;
-    }
-    .main-content {
-      margin-left: 250px;
-      padding: 20px;
-    }
-
-    /* Mobile sidebar */
-    @media (max-width: 768px) {
-      .sidebar {
-        transform: translateX(-100%);
-      }
-      .sidebar.active {
-        transform: translateX(0);
-      }
-      .main-content {
-        margin-left: 0;
-      }
-      .top-bar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-    }
-  </style>
 </head>
 <body class="dashboard-body">
 
