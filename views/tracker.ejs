@@ -8,6 +8,50 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="/dashboard.css">
   <title>ZenTrack - Monthly Tracker</title>
+  <style>
+    /* Scrollbars */
+    html, body {
+      height: 100%;
+      overflow-x: auto;
+      overflow-y: auto;
+    }
+    .grid-viewport {
+      overflow-x: auto;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 250px;
+      min-height: 100vh;
+      background: #fff;
+      position: fixed;
+      left: 0;
+      top: 0;
+      transition: transform 0.3s ease-in-out;
+      z-index: 1000;
+    }
+    .main-content {
+      margin-left: 250px;
+      padding: 20px;
+    }
+
+    /* Mobile sidebar */
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.active {
+        transform: translateX(0);
+      }
+      .main-content {
+        margin-left: 0;
+      }
+      .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
 </head>
 <body class="dashboard-body">
 
@@ -20,33 +64,40 @@
       <a href="/goals" class="nav-item"><i class="fas fa-plus-circle"></i> Manage Goals</a>
       <a href="/analytics" class="nav-item"><i class="fas fa-chart-pie"></i> Analytics</a>
     </nav>
-    <div class="sidebar-footer">
-      <div class="user-pill">
-        <span><%= user.username.charAt(0).toUpperCase() %></span>
-        <div>
-          <p class="u-name"><%= user.username %></p>
-          <a href="/logout" class="logout-link">Logout</a>
-        </div>
-      </div>
+   <div class="sidebar-footer">
+  <div class="user-pill">
+    <div>
+      <p class="u-name"><%= user.username %></p>
+      <p class="u-email"><%= user.email %></p> <!-- 👈 Added line -->
+      <a href="/logout" class="logout-link">Logout</a>
     </div>
+  </div>
+</div>
   </aside>
 
- <main class="main-content">
-  <header class="top-bar">
-    <h1><%= currentMonth %> Tracker</h1>
+ <main class="main-content container-fluid">
+  <header class="top-bar d-flex flex-wrap justify-content-between align-items-center">
+    <div class="d-flex align-items-center">
+      <!-- Toggle button for mobile -->
+      <button class="btn btn-outline-primary d-md-none me-2" id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+      </button>
+      <h1><%= currentMonth %> Tracker</h1>
+    </div>
     <div id="liveClock"></div>
   </header>
 
   <div class="grid-container-card">
     <div class="table-responsive grid-viewport">
-      <table class="zen-grid">
+      <table class="zen-grid table table-bordered">
         <thead>
           <tr class="day-label-row">
             <th class="corner-label">GOALS</th>
             <th colspan="<%= dates.length %>" class="main-day-header">DAY</th>
           </tr>
           <tr class="date-number-row">
-            <th class="sticky-goal-header"></th> <% dates.forEach(date => { %>
+            <th class="sticky-goal-header"></th> 
+            <% dates.forEach(date => { %>
               <th class="date-col-header">
                 <%= moment(date).format('D') %>
               </th>
@@ -55,62 +106,59 @@
         </thead>
         <tbody>
          <% goals.forEach(goal => { %>
-  <tr>
-    <td class="sticky-goal-column">
-      <div class="goal-name-wrapper">
-        <%= goal.name %>
-      </div>
-    </td>
+          <tr>
+            <td class="sticky-goal-column">
+              <div class="goal-name-wrapper">
+                <%= goal.name %>
+              </div>
+            </td>
 
-    <% dates.forEach(date => { 
-      const isDisabled = moment(date).isAfter(moment().startOf('day'));
-      const track = tracks.find(t => 
-        t.goal && t.goal.toString() === goal._id.toString() && 
-        moment(t.date).isSame(date, 'day')
-      ); 
-    %>
-      <td class="grid-checkbox-cell" style="background-color: <%= !isDisabled && (!track || !track.completed) && moment(date).isBefore(moment().startOf('day')) ? '#d3d3d3' : (isDisabled && (!track || !track.completed) ? '#f0f0f0' : 'transparent') %>">
-        <form action="/tracker" method="POST">
-          <input type="hidden" name="date" value="<%= moment(date).format('YYYY-MM-DD') %>">
-          <input type="hidden" name="goalId" value="<%= goal._id %>">
-          <label class="grid-check">
-            <input type="checkbox" name="completed" 
-              <%= track && track.completed ? 'checked' : '' %>
-              <%= isDisabled ? 'disabled' : '' %>
-              onchange="this.form.submit()">
-            <span class="checkmark-ui"></span>
-          </label>
-        </form>
-      </td>
-    <% }) %>
-  </tr>
-<% }) %>
+            <% dates.forEach(date => { 
+              const isDisabled = moment(date).isAfter(moment().startOf('day'));
+              const track = tracks.find(t => 
+                t.goal && t.goal.toString() === goal._id.toString() && 
+                moment(t.date).isSame(date, 'day')
+              ); 
+            %>
+              <td class="grid-checkbox-cell" style="background-color: <%= !isDisabled && (!track || !track.completed) && moment(date).isBefore(moment().startOf('day')) ? '#d3d3d3' : (isDisabled && (!track || !track.completed) ? '#f0f0f0' : 'transparent') %>">
+                <form action="/tracker" method="POST">
+                  <input type="hidden" name="date" value="<%= moment(date).format('YYYY-MM-DD') %>">
+                  <input type="hidden" name="goalId" value="<%= goal._id %>">
+                  <label class="grid-check">
+                    <input type="checkbox" name="completed" 
+                      <%= track && track.completed ? 'checked' : '' %>
+                      <%= isDisabled ? 'disabled' : '' %>
+                      onchange="this.form.submit()">
+                    <span class="checkmark-ui"></span>
+                  </label>
+                </form>
+              </td>
+            <% }) %>
+          </tr>
+        <% }) %>
         </tbody>
       </table>
     </div>
   </div>
 
-  <div class="growth-analysis">
+  <div class="growth-analysis mt-4">
     <h2>User Growth Analysis</h2>
     <p>Your growth is calculated based on the goals you have marked as completed. Keep tracking your progress to see improvements over time!</p>
+    
+    <!-- Bar Chart for Daily Growth -->
+    <div class="chart-card mt-3">
+      <canvas id="dailyGrowthChart"></canvas>
+    </div>
   </div>
 </main>
 
   <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const currentPath = window.location.pathname;
-
-    window.addEventListener('popstate', () => {
-      if (currentPath === '/') {
-        // Redirect to the auth page when back button is clicked from the tracker page
-        window.location.href = '/auth';
-      }
-    });
-
-    // Push the current state to the history stack to ensure the back button works as expected
-    history.pushState(null, '', currentPath);
+  // Sidebar toggle
+  document.getElementById('sidebarToggle').addEventListener('click', () => {
+    document.querySelector('.sidebar').classList.toggle('active');
   });
 
+  // Clock
   function updateClock() {
     const now = new Date();
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -118,9 +166,37 @@
     const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     document.getElementById('liveClock').innerHTML = `${dateString} | ${timeString}`;
   }
-
   setInterval(updateClock, 1000);
-  updateClock(); // Initialize immediately
+  updateClock();
+
+  // Daily Growth Chart (all dates)
+  const labels = <%- JSON.stringify(dates.map(d => moment(d).format("D MMM"))) %>;
+  const dataValues = <%- JSON.stringify(dates.map(date => {
+    const tracksForDate = tracks.filter(t => moment(t.date).isSame(date, 'day'));
+    const completedTracks = tracksForDate.filter(t => t.completed).length;
+    return goals.length > 0 ? (completedTracks / goals.length * 100).toFixed(2) : 0;
+  })) %>;
+
+  new Chart(document.getElementById('dailyGrowthChart'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Daily Growth (%)',
+        data: dataValues,
+        backgroundColor: '#6366f1',
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, max: 100, title: { display: true, text: 'Completion %' } },
+        x: { title: { display: true, text: 'Day' } }
+      }
+    }
+  });
   </script>
 </body>
 </html>
