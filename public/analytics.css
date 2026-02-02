@@ -1,4 +1,4 @@
-/* Reuse the same Root as the Tracker for consistency */
+/* Root variables */
 :root {
   --primary: #6366f1;
   --bg-app: #f1f5f9;
@@ -18,7 +18,7 @@ body.analytics-body {
   margin: 0;
 }
 
-/* Sidebar reuse from Tracker */
+/* Sidebar */
 .sidebar {
   width: var(--sidebar-w);
   height: 100vh;
@@ -29,8 +29,10 @@ body.analytics-body {
   flex-direction: column;
   padding: 1.5rem;
   z-index: 1000;
+  transition: transform 0.3s ease-in-out;
 }
 
+/* Main content */
 .main-content {
   margin-left: var(--sidebar-w);
   flex-grow: 1;
@@ -39,7 +41,7 @@ body.analytics-body {
   animation: fadeIn 0.8s ease-out;
 }
 
-/* Dashboard Grid */
+/* Analytics Grid */
 .analytics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
@@ -55,11 +57,9 @@ body.analytics-body {
   box-shadow: var(--shadow);
   transition: transform 0.3s ease;
 }
-
 .chart-card:hover {
   transform: translateY(-5px);
 }
-
 .chart-card h2 {
   font-size: 1.1rem;
   font-weight: 700;
@@ -69,21 +69,83 @@ body.analytics-body {
   letter-spacing: 1px;
 }
 
-/* Special sizing for the Pie Chart to keep it from getting too huge */
+/* Pie chart wrapper */
 .pie-wrapper {
   max-width: 350px;
   margin: 0 auto;
 }
 
+/* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Responsive */
+/* Responsive Breakpoints */
+
+/* Tablet view */
 @media (max-width: 992px) {
-  .sidebar { width: 80px; padding: 1rem; }
-  .sidebar span, .sidebar p, .brand-logo span, .u-name { display: none; }
-  .main-content { margin-left: 80px; width: calc(100% - 80px); }
-  .analytics-grid { grid-template-columns: 1fr; }
+  .sidebar {
+    width: 80px;
+    padding: 1rem;
+  }
+  .sidebar span, .sidebar p, .brand-logo span, .u-name {
+    display: none;
+  }
+  .main-content {
+    margin-left: 80px;
+    width: calc(100% - 80px);
+    padding: 2rem;
+  }
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile view */
+@media (max-width: 600px) {
+  .sidebar {
+    transform: translateX(-100%);
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+  }
+  .sidebar.active {
+    transform: translateX(0);
+  }
+
+  /* Toggle button for mobile */
+  .sidebar-toggle {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #1e1e2f;
+    color: #fff;
+    border: none;
+    padding: 12px;
+    font-size: 1.2rem;
+    text-align: left;
+    cursor: pointer;
+    z-index: 1100;
+  }
+
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+    padding: 80px 15px 20px; /* push content below toggle bar */
+  }
+
+  .chart-card {
+    padding: 1rem;
+  }
+  .chart-card h2 {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+  .pie-wrapper {
+    max-width: 280px;
+  }
 }
