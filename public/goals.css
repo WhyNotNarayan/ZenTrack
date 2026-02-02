@@ -24,44 +24,6 @@ body.dashboard-body {
   font-family: 'Inter', sans-serif;
 }
 
-/* Sidebar */
-.sidebar {
-  width: var(--sidebar-w);
-  height: 100vh;
-  position: fixed;
-  background: var(--bg-card);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  padding: 2rem 1.25rem;
-  transition: transform 0.3s ease-in-out;
-  z-index: 1000;
-}
-
-.brand-logo {
-  font-weight: 800;
-  margin-bottom: 2rem;
-}
-.brand-logo span {
-  color: var(--primary);
-}
-
-/* Sidebar toggle button */
-.sidebar-toggle {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  background: #1e1e2f;
-  color: #fff;
-  border: none;
-  padding: 12px;
-  font-size: 1.2rem;
-  text-align: left;
-  cursor: pointer;
-  z-index: 1100;
-}
 
 .sidebar-toggle i {
   margin-right: 8px;
