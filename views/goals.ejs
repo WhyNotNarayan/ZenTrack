@@ -85,16 +85,14 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const currentPath = window.location.pathname;
-
-      window.addEventListener('popstate', () => {
-        if (currentPath === '/goals') {
-          // Redirect to the dashboard page when back button is clicked from Manage Goals
-          window.location.href = '/';
-        } else if (currentPath === '/') {
-          // Redirect to the auth page when back button is clicked from the dashboard
-          window.location.href = '/auth';
-        }
+      const sidebar = document.querySelector('.sidebar');
+      const toggleBtn = document.createElement('button');
+      toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+      toggleBtn.classList.add('sidebar-toggle');
+      document.body.appendChild(toggleBtn);
+  
+      toggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('active');
       });
     });
   </script>
