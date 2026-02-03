@@ -27,10 +27,10 @@
   </aside>
 
   <main class="main-content">
-    <header class="d-flex justify-content-between align-items-center mb-5">
+   <header class="d-flex justify-content-between align-items-center mb-5">
   <div class="d-flex align-items-center">
-    <!-- Sidebar Toggle Button -->
-    <button id="sidebarToggle" class="btn btn-dark me-3">
+    <!-- Toggle button (hidden on large screens) -->
+    <button id="sidebarToggle" class="btn btn-dark me-3 d-lg-none">
       <i class="fas fa-bars"></i>
     </button>
     <div>
@@ -43,24 +43,30 @@
   </a>
 </header>
 
-    <div class="analytics-grid">
-      <div class="chart-card" style="grid-column: span 2;">
-        <h2>Consistency Trend</h2>
-        <canvas id="lineChart" height="100"></canvas>
-      </div>
+   <div class="row g-4">
+  <div class="col-12">
+    <div class="chart-card">
+      <h2>Consistency Trend</h2>
+      <canvas id="lineChart" height="100"></canvas>
+    </div>
+  </div>
 
-      <div class="chart-card">
-        <h2>Daily Completion</h2>
-        <canvas id="columnChart"></canvas>
-      </div>
+  <div class="col-md-6 col-12">
+    <div class="chart-card">
+      <h2>Daily Completion</h2>
+      <canvas id="columnChart"></canvas>
+    </div>
+  </div>
 
-      <div class="chart-card">
-        <h2>Distribution</h2>
-        <div class="pie-wrapper">
-          <canvas id="pieChart"></canvas>
-        </div>
+  <div class="col-md-6 col-12">
+    <div class="chart-card">
+      <h2>Distribution</h2>
+      <div class="pie-wrapper">
+        <canvas id="pieChart"></canvas>
       </div>
     </div>
+  </div>
+</div>
   </main>
 
  <script>
@@ -130,6 +136,13 @@
       plugins: { legend: { position: 'bottom' } }
     }
   });
+  const sidebar = document.querySelector('.sidebar');
+  const toggleBtn = document.getElementById('sidebarToggle');
+
+  toggleBtn.addEventListener('click', () => {
+    sidebar.classList.toggle('active');
+  });
+
 </script>
 </body>
 </html>
