@@ -296,6 +296,43 @@ app.get('/analytics', isAuthenticated, async (req, res) => {
   });
 });
 
+// Web Push Notifications
+const webpush = require('web-push');
+const cron = require('node-cron');
+
+webpush.setVapidDetails(
+  'mailto:your-email@example.com',
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
+);
+
+let subscriptions = []; // later you can store in MongoDB
+
+app.post('/subscribe', bodyParser.json(), (req, res) => {
+  const subscription = req.body;
+  subscriptions.push(subscription);
+  res.status(201).json({});
+});
+
+
+// Function to send notifications
+function sendNotification(title, body) {
+  subscriptions.forEach(sub => {
+    webpush.sendNotification(sub, JSON.stringify({ title, body }))
+      .catch(err => console.error(err));
+  });
+}
+
+// Morning reminder at 7 AM
+cron.schedule('0 7 * * *', () => {
+  sendNotification("ZenTrack Reminder 🌞", "Good morning! Don’t forget to mark your goals today.");
+});
+
+// Night reminder at 10 PM
+cron.schedule('0 22 * * *', () => {
+  sendNotification("ZenTrack Reminder 🌙", "Day’s ending — check your progress before bed.");
+});
+
 // Server listen
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`ZenTrack running on port ${port}`));
