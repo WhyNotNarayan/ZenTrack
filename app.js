@@ -336,3 +336,19 @@ cron.schedule('0 22 * * *', () => {
 // Server listen
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`ZenTrack running on port ${port}`));
+
+// Modified login route to show guide on first login
+app.post('/login', async (req, res) => {
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) return res.redirect('/register');
+
+  // if first login, show guide
+  if (user.isFirstLogin) {
+    res.render('tracker', { showGuide: true, user });
+    // mark as guided so next time it won't show
+    user.isFirstLogin = false;
+    await user.save();
+  } else {
+    res.render('tracker', { showGuide: false, user });
+  }
+});
