@@ -11,6 +11,14 @@
 </head>
 <body class="dashboard-body">
 
+<div id="guide" class="guide-overlay">
+  <div class="guide-box">
+    <h2 id="guideTitle">Welcome to ZenTrack 🎉</h2>
+    <p id="guideText">This is your dashboard. Here you can track goals.</p>
+    <button id="nextStep">Next</button>
+  </div>
+</div>
+
   <aside class="sidebar">
     <div class="sidebar-header">
       <h2 class="brand-logo">Zen<span>Track</span></h2>
@@ -40,6 +48,13 @@
       </button>
       <h1><%= currentMonth %> Tracker</h1>
     </div>
+
+  
+    <div class="d-flex align-items-center">
+  <i id="notificationBell" class="fas fa-bell text-secondary fs-4" style="cursor:pointer"></i>
+  <div id="liveClock" class="ms-3"></div>
+</div>
+  
     <div id="liveClock"></div>
   </header>
 
@@ -174,6 +189,122 @@
   }
 }
 initPush();
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+    .then(reg => console.log("Service Worker registered:", reg))
+    .catch(err => console.error("Service Worker registration failed:", err));
+}
+
+function updateBellIcon() {
+  const bell = document.getElementById('notificationBell');
+  if (Notification.permission === "granted") {
+    bell.className = "fas fa-bell text-success fs-4"; // green bell
+    bell.title = "Notifications enabled";
+  } else if (Notification.permission === "denied") {
+    bell.className = "fas fa-bell-slash text-danger fs-4"; // red bell
+    bell.title = "Notifications blocked";
+  } else {
+    bell.className = "fas fa-bell text-secondary fs-4"; // gray bell
+    bell.title = "Notifications not yet allowed";
+  }
+}
+
+// Run on load
+updateBellIcon();
+
+// Handle click
+document.getElementById('notificationBell').addEventListener('click', async () => {
+  if (Notification.permission === "granted") {
+    alert("Notifications are already enabled. To disable, change settings in your browser.");
+  } else if (Notification.permission === "denied") {
+    alert("Notifications are blocked. Please enable them in browser settings.");
+  } else {
+    // Ask for permission again
+    const permission = await Notification.requestPermission();
+    updateBellIcon();
+    if (permission === "granted") {
+      // Register service worker and subscribe
+      const reg = await navigator.serviceWorker.ready;
+      const subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array('<%= process.env.VAPID_PUBLIC_KEY %>')
+      });
+      await fetch('/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(subscription)
+      });
+      alert("Notifications enabled!");
+    }
+  }
+});
+
+// Helper function for VAPID key conversion
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+document.getElementById('notificationBell').addEventListener('click', async () => {
+  if (Notification.permission === "granted") {
+    alert("Notifications are already enabled ✅");
+  } else if (Notification.permission === "denied") {
+    alert("Notifications are blocked ❌. Please enable them in browser settings.");
+  } else {
+    // Ask again
+    const permission = await Notification.requestPermission();
+    updateBellIcon();
+    if (permission === "granted") {
+      alert("Notifications enabled 🎉");
+      // subscribe user here...
+    }
+  }
+});
+
+// Interactive Guide Logic
+let currentStep = 0;
+const steps = [
+  { text: "Welcome to ZenTrack 🎉", highlight: "#notificationBell" },
+  { text: "This is your dashboard. Track your goals here.", highlight: "h1" },
+  { text: "Check analytics to see your progress 📊", highlight: ".analytics-link" }
+];
+
+function showStep(stepIndex) {
+  const guide = document.getElementById("guide");
+  const title = document.getElementById("guideTitle");
+  const text = document.getElementById("guideText");
+  guide.style.display = "flex";
+  title.textContent = "Step " + (stepIndex + 1);
+  text.textContent = steps[stepIndex].text;
+
+  // remove old highlights
+  document.querySelectorAll(".highlight").forEach(el => el.classList.remove("highlight"));
+  // add new highlight
+  const target = document.querySelector(steps[stepIndex].highlight);
+  if (target) target.classList.add("highlight");
+}
+
+document.getElementById("nextStep").addEventListener("click", () => {
+  currentStep++;
+  if (currentStep < steps.length) {
+    showStep(currentStep);
+  } else {
+    document.getElementById("guide").style.display = "none";
+    // TODO: mark user as guided in DB so it doesn’t show again
+  }
+});
+
+// Start guide automatically for first-time users
+showStep(0);
+
   </script>
 </body>
 </html>
