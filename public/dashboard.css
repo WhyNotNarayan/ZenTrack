@@ -1,304 +1,304 @@
 /* --- Root Variables & Theme --- */
 :root {
-    --primary: #6366f1;
-    --bg-app: #f8fafc;
-    --bg-card: #ffffff;
-    --text-main: #1e293b;
-    --text-muted: #64748b;
-    --border: #e2e8f0;
-    --sidebar-w: 260px;
-  }
-  
-  [data-theme="dark"] {
-    --bg-app: #020617;
-    --bg-card: #0f172a;
-    --text-main: #f1f5f9;
-    --text-muted: #94a3b8;
-    --border: #1e293b;
-  }
-  
-  /* --- Base Layout --- */
-  body.dashboard-body {
-    background: var(--bg-app);
-    color: var(--text-main);
-    margin: 0;
-    display: flex;
-    font-family: 'Inter', sans-serif;
-    overflow-x: hidden; /* Prevent body scroll */
-  }
-  
-  /* --- Sidebar --- */
-  .sidebar {
-    width: var(--sidebar-w);
-    height: 100vh;
-    position: fixed;
-    background: var(--bg-card);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    padding: 2rem 1.25rem;
-    z-index: 1000;
-  }
-  
-  .brand-logo { font-weight: 800; color: var(--text-main); font-size: 1.5rem; margin-bottom: 2rem; }
-  .brand-logo span { color: var(--primary); }
-  
-  .nav-item {
-    display: flex;
-    align-items: center;
-    padding: 0.75rem 1rem;
-    color: var(--text-muted);
-    text-decoration: none;
-    border-radius: 10px;
-    margin-bottom: 0.5rem;
-    transition: 0.3s;
-  }
-  
-  .nav-item.active { background: rgba(99, 102, 241, 0.1); color: var(--primary); font-weight: 600; }
-  .nav-item i { margin-right: 12px; }
-  
-  /* --- Main Content Area --- */
-  .main-content {
-    margin-left: var(--sidebar-w);
-    flex-grow: 1;
-    padding: 2rem;
-    width: calc(100% - var(--sidebar-w));
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-  }
-  
-  /* --- The Grid Tracker (The "Adjustable Bar" Logic) --- */
-  .grid-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    overflow: hidden; /* Clips the table properly */
-    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-  }
-  
-  .scroll-viewport {
-    width: 100%;
-    overflow-x: auto; /* This creates the horizontal scrollbar you requested */
-    overflow-y: auto; /* Vertical scroll if many goals */
-    max-height: 75vh;
-    display: block;
-  }
-  
-  .zen-grid {
-    border-collapse: separate;
-    border-spacing: 0;
-    width: max-content; /* Forces the table to expand horizontally */
-    min-width: 100%;
-  }
-  
-  /* --- Sticky Positioning (The "Fixed" Logic) --- */
-  
-  /* 1. Sticky Left Column (Goals) */
-  .fixed-goal-col, 
-  .corner-header, 
-  .sticky-left-blank {
-    position: sticky;
-    left: 0;
-    z-index: 100; /* Higher than headers */
-    background: var(--bg-card) !important;
-    border-right: 2.5px solid var(--border);
-    min-width: 200px;
-    padding: 15px;
-    text-align: left;
-  }
-  
-  /* 2. Sticky Top Row (DAY and Date Numbers) */
-  .day-label-header, 
-  .date-number, 
-  .corner-header,
-  .sticky-left-blank {
-    position: sticky;
-    top: 0;
-    background: var(--bg-card);
-    z-index: 50;
-    border-bottom: 1px solid var(--border);
-  }
-  
-  /* 3. The Corner (GOALS text area) */
-  .corner-header {
-    z-index: 150; /* Highest priority */
-    font-weight: 800;
-    color: var(--primary);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-  
-  /* --- Table Styling --- */
-  .day-label-header {
-    text-align: center;
-    font-weight: 700;
-    letter-spacing: 10px;
-    padding: 12px;
-    background: var(--bg-app) !important;
-    font-size: 0.9rem;
-  }
-  
-  .date-number {
-    min-width: 50px;
-    text-align: center;
-    padding: 10px;
-    font-weight: 700;
-    color: var(--text-main);
-    border-right: 1px solid var(--border);
-  }
-  
-  .goal-text {
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--text-main);
-  }
-  
-  /* --- Checkbox Styling --- */
-  .checkbox-cell {
-    text-align: center;
-    padding: 12px;
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-  }
-  
-  .cell-check { cursor: pointer; display: inline-block; }
-  .cell-check input { display: none; }
-  
-  .box-ui {
-    display: block;
-    width: 24px;
-    height: 24px;
-    border: 2px solid var(--border);
-    border-radius: 6px;
-    background: var(--bg-app);
-    transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .cell-check input:checked + .box-ui {
-    background: var(--primary);
-    border-color: var(--primary);
-    transform: scale(1.1);
-  }
-  
-  .cell-check input:checked + .box-ui::after {
-    content: '✓';
-    color: white;
-    font-size: 14px;
-    font-weight: 900;
-    display: block;
-    text-align: center;
-    line-height: 20px;
-  }
-  
-  /* --- Extras --- */
-  .zen-grid tr:hover td {
-    background: rgba(99, 102, 241, 0.02);
-  }
-  
-  .theme-btn {
-    width: 45px; height: 45px; border-radius: 12px;
-    background: var(--bg-card); border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    color: var(--text-main); text-decoration: none; transition: 0.3s;
-  }
-  
-  .theme-btn:hover { background: var(--primary); color: white; }
+  --primary: #6366f1;
+  --bg-app: #f8fafc;
+  --bg-card: #ffffff;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --sidebar-w: 260px;
+}
+
+[data-theme="dark"] {
+  --bg-app: #020617;
+  --bg-card: #0f172a;
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --border: #1e293b;
+}
+
+/* --- Base Layout --- */
+body.dashboard-body {
+  background: var(--bg-app);
+  color: var(--text-main);
+  margin: 0;
+  display: flex;
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden; /* Prevent body scroll */
+}
+
+/* --- Sidebar --- */
+.sidebar {
+  width: var(--sidebar-w);
+  height: 100vh;
+  position: fixed;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 1.25rem;
+  z-index: 1000;
+}
+
+.brand-logo { font-weight: 800; color: var(--text-main); font-size: 1.5rem; margin-bottom: 2rem; }
+.brand-logo span { color: var(--primary); }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  border-radius: 10px;
+  margin-bottom: 0.5rem;
+  transition: 0.3s;
+}
+
+.nav-item.active { background: rgba(99, 102, 241, 0.1); color: var(--primary); font-weight: 600; }
+.nav-item i { margin-right: 12px; }
+
+/* --- Main Content Area --- */
+.main-content {
+  margin-left: var(--sidebar-w);
+  flex-grow: 1;
+  padding: 2rem;
+  width: calc(100% - var(--sidebar-w));
+  display: flex;
+  flex-direction: column;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+/* --- The Grid Tracker (The "Adjustable Bar" Logic) --- */
+.grid-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden; /* Clips the table properly */
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+}
+
+.scroll-viewport {
+  width: 100%;
+  overflow-x: auto; /* This creates the horizontal scrollbar you requested */
+  overflow-y: auto; /* Vertical scroll if many goals */
+  max-height: 75vh;
+  display: block;
+}
+
+.zen-grid {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: max-content; /* Forces the table to expand horizontally */
+  min-width: 100%;
+}
+
+/* --- Sticky Positioning (The "Fixed" Logic) --- */
+
+/* 1. Sticky Left Column (Goals) */
+.fixed-goal-col, 
+.corner-header, 
+.sticky-left-blank {
+  position: sticky;
+  left: 0;
+  z-index: 100; /* Higher than headers */
+  background: var(--bg-card) !important;
+  border-right: 2.5px solid var(--border);
+  min-width: 200px;
+  padding: 15px;
+  text-align: left;
+}
+
+/* 2. Sticky Top Row (DAY and Date Numbers) */
+.day-label-header, 
+.date-number, 
+.corner-header,
+.sticky-left-blank {
+  position: sticky;
+  top: 0;
+  background: var(--bg-card);
+  z-index: 50;
+  border-bottom: 1px solid var(--border);
+}
+
+/* 3. The Corner (GOALS text area) */
+.corner-header {
+  z-index: 150; /* Highest priority */
+  font-weight: 800;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* --- Table Styling --- */
+.day-label-header {
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 10px;
+  padding: 12px;
+  background: var(--bg-app) !important;
+  font-size: 0.9rem;
+}
+
+.date-number {
+  min-width: 50px;
+  text-align: center;
+  padding: 10px;
+  font-weight: 700;
+  color: var(--text-main);
+  border-right: 1px solid var(--border);
+}
+
+.goal-text {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+
+/* --- Checkbox Styling --- */
+.checkbox-cell {
+  text-align: center;
+  padding: 12px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.cell-check { cursor: pointer; display: inline-block; }
+.cell-check input { display: none; }
+
+.box-ui {
+  display: block;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-app);
+  transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cell-check input:checked + .box-ui {
+  background: var(--primary);
+  border-color: var(--primary);
+  transform: scale(1.1);
+}
+
+.cell-check input:checked + .box-ui::after {
+  content: '✓';
+  color: white;
+  font-size: 14px;
+  font-weight: 900;
+  display: block;
+  text-align: center;
+  line-height: 20px;
+}
+
+/* --- Extras --- */
+.zen-grid tr:hover td {
+  background: rgba(99, 102, 241, 0.02);
+}
+
+.theme-btn {
+  width: 45px; height: 45px; border-radius: 12px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-main); text-decoration: none; transition: 0.3s;
+}
+
+.theme-btn:hover { background: var(--primary); color: white; }
 
 #liveClock {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: var(--primary);
-  text-align: center;
-  animation: fadeIn 1s ease-in-out;
+font-size: 1.5rem;
+font-weight: bold;
+color: var(--primary);
+text-align: center;
+animation: fadeIn 1s ease-in-out;
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+from {
+  opacity: 0;
+}
+to {
+  opacity: 1;
+}
 }
 
 
-    /* Scrollbars */
-    html, body {
-      height: 100%;
-      overflow-x: auto;
-      overflow-y: auto;
-    }
-    .grid-viewport {
-      overflow-x: auto;
-    }
+  /* Scrollbars */
+  html, body {
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+  }
+  .grid-viewport {
+    overflow-x: auto;
+  }
 
-    /* Sidebar */
+  /* Sidebar */
+  .sidebar {
+    width: 250px;
+    min-height: 100vh;
+    background: #fff;
+    position: fixed;
+    left: 0;
+    top: 0;
+    transition: transform 0.3s ease-in-out;
+    z-index: 1000;
+  }
+  .main-content {
+    margin-left: 250px;
+    padding: 20px;
+  }
+
+  /* Mobile sidebar */
+  @media (max-width: 768px) {
     .sidebar {
-      width: 250px;
-      min-height: 100vh;
-      background: #fff;
-      position: fixed;
-      left: 0;
-      top: 0;
-      transition: transform 0.3s ease-in-out;
-      z-index: 1000;
+      transform: translateX(-100%);
+    }
+    .sidebar.active {
+      transform: translateX(0);
     }
     .main-content {
-      margin-left: 250px;
-      padding: 20px;
+      margin-left: 0;
     }
-
-    /* Mobile sidebar */
-    @media (max-width: 768px) {
-      .sidebar {
-        transform: translateX(-100%);
-      }
-      .sidebar.active {
-        transform: translateX(0);
-      }
-      .main-content {
-        margin-left: 0;
-      }
-      .top-bar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
+    .top-bar {
+      flex-direction: column;
+      align-items: flex-start;
     }
+  }
 /* Add a glowing effect to the clock */
 #liveClock {
-  text-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary), 0 0 30px var(--primary);
+text-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary), 0 0 30px var(--primary);
 }
 
 /* Add a smooth transition for time updates */
 #liveClock {
-  transition: all 0.3s ease-in-out;
+transition: all 0.3s ease-in-out;
 }
 /* --- User Guide Overlay --- */
 .guide-overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.6);
-  display: none; /* hidden by default */
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
+position: fixed;
+top: 0; left: 0;
+width: 100%; height: 100%;
+background: rgba(0,0,0,0.6);
+display: none; /* hidden by default */
+align-items: center;
+justify-content: center;
+z-index: 9999;
 }
 .guide-box {
-  background: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  max-width: 400px;
-  text-align: center;
+background: #fff;
+padding: 20px;
+border-radius: 8px;
+max-width: 400px;
+text-align: center;
 }
 .highlight {
-  outline: 3px solid #ff9800;
-  border-radius: 4px;
+outline: 3px solid #ff9800;
+border-radius: 4px;
 }
