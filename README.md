@@ -55,11 +55,3 @@ This project focuses heavily on **UX, sticky tables, smooth scrolling, and analy
 - Theme variables included
 
 ---
-
-## 🖼️ Screenshots
-
-> 📌 *(Add your screenshots here)*
-
-```text
-📸 /screenshots/tracker.png
-📸 /screenshots/analytics.png
