@@ -35,14 +35,21 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-passport.use(new LocalStrategy(async (username, password, done) => {
+passport.use(new LocalStrategy({
+  usernameField: 'email',
+  passwordField: 'password'
+}, async (email, password, done) => {
   try {
-    const user = await User.findOne({ username });
-    if (!user) return done(null, false, { message: 'Incorrect username' });
+    const user = await User.findOne({ email });
+    if (!user) return done(null, false, { message: 'Incorrect email' });
+
     const match = await bcrypt.compare(password, user.password);
     if (!match) return done(null, false, { message: 'Incorrect password' });
+
     return done(null, user);
-  } catch (err) { return done(err); }
+  } catch (err) {
+    return done(err);
+  }
 }));
 
 passport.serializeUser((user, done) => done(null, user.id));
@@ -97,17 +104,6 @@ app.post('/login', passport.authenticate('local', {
   failureMessage: true
 }));
 
-// Update passport to use email
-passport.use(new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {
-  try {
-    const user = await User.findOne({ email });
-    if (!user) return done(null, false, { message: 'Incorrect email' });
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) return done(null, false, { message: 'Incorrect password' });
-    return done(null, user);
-  } catch (err) { return done(err); }
-}));
-
 // Redirect old /login and /signup to /auth
 app.get('/login', (req, res) => res.redirect('/auth'));
 app.get('/signup', (req, res) => res.redirect('/auth'));
@@ -137,6 +133,7 @@ app.get('/toggle-theme', isAuthenticated, (req, res) => {
 });
 
 // Home route
+// Home route ────────────────────────────────────────────────────────────────
 app.get('/', isAuthenticated, async (req, res) => {
   const today = moment().startOf('day').toDate();
   const goals = await Goal.find({ user: req.user._id });
@@ -173,6 +170,22 @@ app.get('/', isAuthenticated, async (req, res) => {
     }
   ];
 
+  // ─── FIXED & SAFE GUIDE LOGIC ────────────────────────────────────────────
+  // Treat missing/undefined field as "first login" → show guide
+  const showGuide = req.user.isFirstLogin !== false;
+
+  if (showGuide) {
+    console.log(`[Guide] Showing tour for ${req.user.email || req.user.username} — isFirstLogin was: ${req.user.isFirstLogin}`);
+    
+    req.user.isFirstLogin = false;
+    await req.user.save();
+    
+    console.log(`[Guide] isFirstLogin updated to false`);
+  } else {
+    console.log(`[Guide] Skipped — isFirstLogin = ${req.user.isFirstLogin}`);
+  }
+  // ──────────────────────────────────────────────────────────────────────────
+
   res.render('tracker', {
     goals,
     tracks,
@@ -184,11 +197,10 @@ app.get('/', isAuthenticated, async (req, res) => {
     currentMonth: currentMonth.format('MMMM YYYY'),
     dates,
     progress: JSON.stringify(progress),
-    data
+    data,
+    showGuide
   });
 });
-
-// ... keep all your existing requires and setup above
 
 // Manage Goals page
 app.get('/goals', isAuthenticated, async (req, res) => {
@@ -197,13 +209,6 @@ app.get('/goals', isAuthenticated, async (req, res) => {
 });
 
 // Add a new goal
-app.post('/goals', isAuthenticated, async (req, res) => {
-  const { name, time } = req.body;
-  await new Goal({ name, time, user: req.user._id }).save();
-  res.redirect('/goals');
-});
-
-// POST /tracker
 app.post('/goals', isAuthenticated, async (req, res) => {
   const { name, time } = req.body;
   await new Goal({ name, time, user: req.user._id }).save();
@@ -340,19 +345,4 @@ app.listen(port, () => console.log(`ZenTrack running on port ${port}`));
 // Example route
 app.get('/tracker', (req, res) => {
   res.render('tracker', { showGuide: true });  // or false
-});
-
-// Modified login route to show guide on first login
-app.post('/login', async (req, res) => {
-  const user = await User.findOne({ email: req.body.email });
-
-  if (!user) return res.redirect('/register');
-
-  if (user.isFirstLogin) {
-    res.render('tracker', { showGuide: true, user });
-    user.isFirstLogin = false;
-    await user.save();
-  } else {
-    res.render('tracker', { showGuide: false, user });
-  }
 });
