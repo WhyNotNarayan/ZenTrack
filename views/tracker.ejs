@@ -11,11 +11,47 @@
 </head>
 <body class="dashboard-body">
 
-<div id="guide" class="guide-overlay">
-  <div class="guide-box">
-    <h2 id="guideTitle">Welcome to ZenTrack 🎉</h2>
-    <p id="guideText">This is your dashboard. Here you can track goals.</p>
-    <button id="nextStep">Next</button>
+<!-- Guide Overlay (only shown for first-time users) -->
+<div id="onboarding-guide" class="onboarding-guide" style="display: none;">
+  <div class="guide-backdrop"></div>
+  
+  <div class="guide-content">
+    <div class="guide-step" id="step-1">
+      <h2>Welcome to ZenTrack! 🌟</h2>
+      <p>This is your <strong>Tracker</strong> — your daily dashboard.<br>
+         Here you mark which goals you completed today.<br>
+         Small daily wins = big life changes!</p>
+      <div class="guide-actions">
+        <button class="btn-skip" onclick="skipGuide()">Skip tour</button>
+        <button class="btn-next" onclick="nextStep(2)">Next →</button>
+      </div>
+    </div>
+
+    <div class="guide-step" id="step-2" style="display:none;">
+      <h2>Manage Goals</h2>
+      <p>Click here to <strong>add, edit or delete</strong> your goals.<br>
+         Example: "Drink 3L water", "Exercise 30 min", "Read 20 pages" etc.<br>
+         Whatever you want to achieve — add it here!</p>
+      <div class="guide-actions">
+        <button class="btn-prev" onclick="prevStep(1)">← Previous</button>
+        <button class="btn-skip" onclick="skipGuide()">Skip tour</button>
+        <button class="btn-next" onclick="nextStep(3)">Next →</button>
+      </div>
+    </div>
+
+    <div class="guide-step" id="step-3" style="display:none;">
+      <h2>Analytics & Progress</h2>
+      <p>Here you can see your <strong>progress over time</strong>.<br>
+         Beautiful graphs show:<br>
+         • Daily completion %<br>
+         • Monthly trends<br>
+         • How consistent you're becoming</p>
+      <div class="guide-actions">
+        <button class="btn-prev" onclick="prevStep(2)">← Previous</button>
+        <button class="btn-skip" onclick="skipGuide()">Skip tour</button>
+        <button class="btn-finish" onclick="finishGuide()">Finish & Start Tracking! 🚀</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -123,188 +159,189 @@
   </div>
 </main>
 
-  <script>
-  // Sidebar toggle
-  document.getElementById('sidebarToggle').addEventListener('click', () => {
-    document.querySelector('.sidebar').classList.toggle('active');
-  });
+<script>
+// ──────────────────────────────────────────────
+// Sidebar mobile toggle
+// ──────────────────────────────────────────────
+document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+  document.querySelector('.sidebar')?.classList.toggle('active');
+});
 
-  // Clock
-  function updateClock() {
-    const now = new Date();
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    const dateString = now.toLocaleDateString('en-US', options);
-    const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    document.getElementById('liveClock').innerHTML = `${dateString} | ${timeString}`;
-  }
-  setInterval(updateClock, 1000);
-  updateClock();
+// ──────────────────────────────────────────────
+// Live Clock
+// ──────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const dateString = now.toLocaleDateString('en-US', options);
+  const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const clockEl = document.getElementById('liveClock');
+  if (clockEl) clockEl.innerHTML = `${dateString} | ${timeString}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
 
-  // Daily Growth Chart (all dates)
-  const labels = <%- JSON.stringify(dates.map(d => moment(d).format("D MMM"))) %>;
-  const dataValues = <%- JSON.stringify(dates.map(date => {
-    const tracksForDate = tracks.filter(t => moment(t.date).isSame(date, 'day'));
-    const completedTracks = tracksForDate.filter(t => t.completed).length;
-    return goals.length > 0 ? (completedTracks / goals.length * 100).toFixed(2) : 0;
-  })) %>;
+// ──────────────────────────────────────────────
+// Daily Growth Chart
+// ──────────────────────────────────────────────
+const labels = <%- JSON.stringify(dates.map(d => moment(d).format("D MMM"))) %>;
+const dataValues = <%- JSON.stringify(dates.map(date => {
+  const tracksForDate = tracks.filter(t => moment(t.date).isSame(date, 'day'));
+  const completedTracks = tracksForDate.filter(t => t.completed).length;
+  return goals.length > 0 ? (completedTracks / goals.length * 100).toFixed(2) : 0;
+})) %>;
 
-  new Chart(document.getElementById('dailyGrowthChart'), {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: 'Daily Growth (%)',
-        data: dataValues,
-        backgroundColor: '#6366f1',
-        borderRadius: 6
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { beginAtZero: true, max: 100, title: { display: true, text: 'Completion %' } },
-        x: { title: { display: true, text: 'Day' } }
-      }
+new Chart(document.getElementById('dailyGrowthChart'), {
+  type: 'bar',
+  data: {
+    labels: labels,
+    datasets: [{
+      label: 'Daily Growth (%)',
+      data: dataValues,
+      backgroundColor: '#6366f1',
+      borderRadius: 6
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, max: 100, title: { display: true, text: 'Completion %' } },
+      x: { title: { display: true, text: 'Day' } }
     }
-  });
+  }
+});
 
-  // Push Notifications Setup
-  async function initPush() {
-  if ('serviceWorker' in navigator && 'PushManager' in window) {
+// ──────────────────────────────────────────────
+// Push Notifications (cleaned – only one listener)
+// ──────────────────────────────────────────────
+async function initPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    console.log("Push notifications not supported");
+    return;
+  }
+
+  try {
     const reg = await navigator.serviceWorker.register('/sw.js');
-    const subscription = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: '<%= process.env.VAPID_PUBLIC_KEY %>'
-    });
-
-    // Send subscription to backend
-    await fetch('/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(subscription)
-    });
-  } else {
-    console.log("Push not supported");
-  }
-}
-initPush();
-
-// Register Service Worker
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js')
-    .then(reg => console.log("Service Worker registered:", reg))
-    .catch(err => console.error("Service Worker registration failed:", err));
-}
-
-function updateBellIcon() {
-  const bell = document.getElementById('notificationBell');
-  if (Notification.permission === "granted") {
-    bell.className = "fas fa-bell text-success fs-4"; // green bell
-    bell.title = "Notifications enabled";
-  } else if (Notification.permission === "denied") {
-    bell.className = "fas fa-bell-slash text-danger fs-4"; // red bell
-    bell.title = "Notifications blocked";
-  } else {
-    bell.className = "fas fa-bell text-secondary fs-4"; // gray bell
-    bell.title = "Notifications not yet allowed";
-  }
-}
-
-// Run on load
-updateBellIcon();
-
-// Handle click
-document.getElementById('notificationBell').addEventListener('click', async () => {
-  if (Notification.permission === "granted") {
-    alert("Notifications are already enabled. To disable, change settings in your browser.");
-  } else if (Notification.permission === "denied") {
-    alert("Notifications are blocked. Please enable them in browser settings.");
-  } else {
-    // Ask for permission again
     const permission = await Notification.requestPermission();
-    updateBellIcon();
-    if (permission === "granted") {
-      // Register service worker and subscribe
-      const reg = await navigator.serviceWorker.ready;
+
+    if (permission === 'granted') {
       const subscription = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array('<%= process.env.VAPID_PUBLIC_KEY %>')
+        applicationServerKey: '<%= process.env.VAPID_PUBLIC_KEY %>'
       });
+
       await fetch('/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(subscription)
       });
-      alert("Notifications enabled!");
+      updateBellIcon();
     }
+  } catch (err) {
+    console.error("Push setup failed:", err);
   }
-});
-
-// Helper function for VAPID key conversion
-function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
 }
 
-document.getElementById('notificationBell').addEventListener('click', async () => {
+function updateBellIcon() {
+  const bell = document.getElementById('notificationBell');
+  if (!bell) return;
+
   if (Notification.permission === "granted") {
-    alert("Notifications are already enabled ✅");
+    bell.className = "fas fa-bell text-success fs-4";
+    bell.title = "Notifications enabled";
   } else if (Notification.permission === "denied") {
-    alert("Notifications are blocked ❌. Please enable them in browser settings.");
+    bell.className = "fas fa-bell-slash text-danger fs-4";
+    bell.title = "Notifications blocked";
   } else {
-    // Ask again
-    const permission = await Notification.requestPermission();
-    updateBellIcon();
-    if (permission === "granted") {
-      alert("Notifications enabled 🎉");
-      // subscribe user here...
-    }
+    bell.className = "fas fa-bell text-secondary fs-4";
+    bell.title = "Notifications not allowed yet";
   }
-});
-
-// Interactive Guide Logic
-let currentStep = 0;
-const steps = [
-  { text: "Welcome to ZenTrack 🎉", highlight: "#notificationBell" },
-  { text: "This is your dashboard. Track your goals here.", highlight: "h1" },
-  { text: "Check analytics to see your progress 📊", highlight: ".analytics-link" }
-];
-
-function showStep(stepIndex) {
-  const guide = document.getElementById("guide");
-  const title = document.getElementById("guideTitle");
-  const text = document.getElementById("guideText");
-  guide.style.display = "flex";
-  title.textContent = "Step " + (stepIndex + 1);
-  text.textContent = steps[stepIndex].text;
-
-  // remove old highlights
-  document.querySelectorAll(".highlight").forEach(el => el.classList.remove("highlight"));
-  // add new highlight
-  const target = document.querySelector(steps[stepIndex].highlight);
-  if (target) target.classList.add("highlight");
 }
 
-document.getElementById("nextStep").addEventListener("click", () => {
-  currentStep++;
-  if (currentStep < steps.length) {
-    showStep(currentStep);
-  } else {
-    document.getElementById("guide").style.display = "none";
-    // TODO: mark user as guided in DB so it doesn’t show again
+document.getElementById('notificationBell')?.addEventListener('click', async () => {
+  if (Notification.permission === "granted") {
+    alert("Notifications are already enabled. Manage them in browser settings.");
+    return;
+  }
+
+  const permission = await Notification.requestPermission();
+  updateBellIcon();
+
+  if (permission === "granted") {
+    await initPush();
+    alert("Notifications enabled! 🎉");
+  } else if (permission === "denied") {
+    alert("Notifications blocked. Please enable them in browser settings.");
   }
 });
 
-// Start guide automatically for first-time users
-showStep(0);
+updateBellIcon(); // initial state
 
-  </script>
+// ──────────────────────────────────────────────
+// Onboarding Guide (new version – only this one!)
+// ──────────────────────────────────────────────
+
+<% if (showGuide) { %>
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('onboarding-guide').style.display = 'block';
+  showStep(1);
+});
+<% } %>
+
+let currentGuideStep = 1;
+
+function showStep(step) {
+  currentGuideStep = step;
+
+  document.querySelectorAll('.guide-step').forEach(el => el.style.display = 'none');
+  const current = document.getElementById(`step-${step}`);
+  if (current) current.style.display = 'block';
+
+  removeAllHighlights();
+
+  if (step === 2) {
+    highlightElement('.nav-item[href="/goals"]');
+  } else if (step === 3) {
+    highlightElement('.nav-item[href="/analytics"]');
+  }
+}
+
+function highlightElement(selector) {
+  const el = document.querySelector(selector);
+  if (el) {
+    el.classList.add('guide-highlight');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function removeAllHighlights() {
+  document.querySelectorAll('.guide-highlight').forEach(el => {
+    el.classList.remove('guide-highlight');
+  });
+}
+
+function nextStep(step) {
+  showStep(step);
+}
+
+function prevStep(step) {
+  showStep(step);
+}
+
+function skipGuide() {
+  finishGuide(true);
+}
+
+function finishGuide(silent = false) {
+  const guide = document.getElementById('onboarding-guide');
+  if (guide) guide.style.display = 'none';
+  removeAllHighlights();
+
+  if (!silent) {
+    alert("Great! You're all set. Start building your habits today! 💪");
+  }
+}
+</script>
 </body>
 </html>
