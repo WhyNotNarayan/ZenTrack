@@ -1,9 +1,11 @@
-self.addEventListener('push', event => {
-    const data = event.data.json();
-    event.waitUntil(
-      self.registration.showNotification(data.title, {
-        body: data.body,
-        icon: '/icon.png' // optional, you can add an icon in public/
-      })
-    );
-  });
+// public/sw.js
+self.addEventListener('push', function(event) {
+  const data = event.data.json();
+  const options = {
+    body: data.body,
+    icon: '/icon.png', // optional
+  };
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});

@@ -182,6 +182,82 @@ setInterval(updateClock, 1000);
 updateClock();
 
 // ──────────────────────────────────────────────
+// Push Notifications – improved version
+// ──────────────────────────────────────────────
+async function registerAndSubscribe() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    console.log("Push not supported in this browser");
+    return;
+  }
+
+  try {
+    const reg = await navigator.serviceWorker.register('/sw.js');
+    console.log('Service Worker registered');
+
+    let permission = Notification.permission;
+    if (permission === 'default') {
+      permission = await Notification.requestPermission();
+    }
+
+    if (permission !== 'granted') {
+      console.log('Notification permission not granted');
+      updateBellIcon();
+      return;
+    }
+
+    const subscription = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array('<%= process.env.VAPID_PUBLIC_KEY %>')
+    });
+
+    const res = await fetch('/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(subscription)
+    });
+
+    if (res.ok) {
+      console.log('Push subscription sent to server successfully');
+      updateBellIcon();
+    } else {
+      console.error('Failed to send subscription to server');
+    }
+  } catch (err) {
+    console.error('Push registration/subscription failed:', err);
+    updateBellIcon();
+  }
+}
+
+// Run on page load
+if ('serviceWorker' in navigator) {
+  registerAndSubscribe();
+}
+
+function updateBellIcon() {
+  const bell = document.getElementById('notificationBell');
+  if (!bell) return;
+
+  if (Notification.permission === 'granted') {
+    bell.className = 'fas fa-bell text-success fs-4';
+    bell.title = 'Notifications enabled';
+  } else if (Notification.permission === 'denied') {
+    bell.className = 'fas fa-bell-slash text-danger fs-4';
+    bell.title = 'Notifications blocked';
+  } else {
+    bell.className = 'fas fa-bell text-secondary fs-4';
+    bell.title = 'Click to enable notifications';
+  }
+}
+
+document.getElementById('notificationBell')?.addEventListener('click', () => {
+  if (Notification.permission === 'granted') {
+    alert('Notifications already enabled. To disable, go to browser settings.');
+    return;
+  }
+  registerAndSubscribe();
+});
+
+// ──────────────────────────────────────────────
 // Daily Growth Chart
 // ──────────────────────────────────────────────
 const labels = <%- JSON.stringify(dates.map(d => moment(d).format("D MMM"))) %>;

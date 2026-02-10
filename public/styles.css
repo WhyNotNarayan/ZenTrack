@@ -16,6 +16,18 @@ body {
   overflow: hidden;
 }
 
+html {
+  font-size: 16px;          /* standard base size */
+  -webkit-text-size-adjust: 100%;  /* important for mobile Chrome */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+}
+
 /* Auth Container & Flip Animation */
 .auth-wrapper {
   perspective: 1200px;

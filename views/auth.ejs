@@ -44,6 +44,13 @@
             </div>
             <button type="submit" class="btn-modern mt-3">Sign In</button>
           </form>
+          <!-- Add below your existing login/signup forms -->
+<div class="text-center mt-4">
+  <p>or continue with</p>
+  <button id="googleLoginBtn" class="btn btn-outline-primary btn-lg w-75">
+    <i class="fab fa-google me-2"></i> Continue with Google
+  </button>
+</div>
           
           <div class="footer-link">
             <span>New here?</span> <a href="#" onclick="flip()">Create an account</a>
@@ -88,6 +95,14 @@
                 Mobile number must be exactly 10 digits.
               </div>
             </div>
+
+            <!-- Add below your existing login/signup forms -->
+          <div class="text-center mt-4">
+          <p>or continue with</p>
+          <button id="googleLoginBtn" class="btn btn-outline-primary btn-lg w-75">
+         <i class="fab fa-google me-2"></i> Continue with Google
+       </button>
+      </div>
 
             <button type="submit" class="btn-modern mt-3">Get Started</button>
           </form>
@@ -135,6 +150,38 @@
         }
       });
     }
+
+    import { auth, googleProvider, signInWithPopup } from '/firebase-config.js';
+
+  const googleBtn = document.getElementById('googleLoginBtn');
+
+  if (googleBtn) {
+    googleBtn.addEventListener('click', async () => {
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+
+        // Get ID token to send to your backend
+        const idToken = await user.getIdToken();
+
+        // Send to your Express backend
+        const response = await fetch('/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken })
+        });
+
+        if (response.ok) {
+          window.location.href = '/'; // go to dashboard
+        } else {
+          alert('Google login failed - please try again');
+        }
+      } catch (error) {
+        console.error('Google sign-in error:', error);
+        alert('Error: ' + error.message);
+      }
+    });
+  }
 
     // Handle Password Focus (Blink/Close effect)
     document.querySelectorAll('.password-field').forEach(field => {
