@@ -12,10 +12,12 @@ const MongoStore = require('connect-mongo');
 const Goal = require('./models/Goal');
 const DailyTrack = require('./models/DailyTrack');
 const User = require('./models/User');
+const PushSubscription = require('./models/PushSubscription');
 
 const app = express();
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json()); // ← Added: needed for /subscribe JSON payload
 app.use(express.static('public'));
 
 // Connect to MongoDB
@@ -83,17 +85,51 @@ app.get('/auth', (req, res) => {
 });
 
 // Signup
+// Signup
 app.post('/signup', async (req, res) => {
   try {
     const { email, username, password, mobile } = req.body;
+
+    // ─── Mobile number validation ─────────────────────────────────────────────
+    if (!mobile || typeof mobile !== 'string') {
+      return res.redirect('/auth?error=Mobile number is required');
+    }
+
+    // Remove everything that is not a digit (spaces, -, +, etc.)
+    const cleanedMobile = mobile.replace(/\D/g, '');
+
+    // Must be EXACTLY 10 digits
+    if (cleanedMobile.length !== 10) {
+      return res.redirect('/auth?error=Mobile number must be exactly 10 digits (no more, no less)');
+    }
+
+    // Optional: Check if it starts with valid Indian mobile prefix (6,7,8,9)
+    // if (!['6','7','8','9'].includes(cleanedMobile[0])) {
+    //   return res.redirect('/auth?error=Please enter a valid 10-digit Indian mobile number');
+    // }
+
+    // ──────────────────────────────────────────────────────────────────────────
+
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
-    if (existingUser) return res.redirect('/auth?error=Email or username already exists');
+    if (existingUser) {
+      return res.redirect('/auth?error=Email or username already exists');
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ email, username, password: hashedPassword, mobile });
+    const newUser = new User({ 
+      email, 
+      username, 
+      password: hashedPassword, 
+      mobile: cleanedMobile   // save only digits, cleaned version
+    });
+
     await newUser.save();
-    res.redirect('/auth');
+
+    // Optional: success message
+    res.redirect('/auth?success=Account created successfully! Please login now.');
   } catch (err) {
-    res.redirect('/auth?error=Signup failed');
+    console.error('Signup error:', err);
+    res.redirect('/auth?error=Something went wrong. Please try again.');
   }
 });
 
@@ -133,7 +169,6 @@ app.get('/toggle-theme', isAuthenticated, (req, res) => {
 });
 
 // Home route
-// Home route ────────────────────────────────────────────────────────────────
 app.get('/', isAuthenticated, async (req, res) => {
   const today = moment().startOf('day').toDate();
   const goals = await Goal.find({ user: req.user._id });
@@ -171,7 +206,6 @@ app.get('/', isAuthenticated, async (req, res) => {
   ];
 
   // ─── FIXED & SAFE GUIDE LOGIC ────────────────────────────────────────────
-  // Treat missing/undefined field as "first login" → show guide
   const showGuide = req.user.isFirstLogin !== false;
 
   if (showGuide) {
@@ -311,38 +345,88 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY
 );
 
-let subscriptions = []; // later you can store in MongoDB
+// ─── Send notification to all valid subscriptions from DB ──────────────────────
+async function sendNotification(title, body) {
+  try {
+    const allSubs = await PushSubscription.find({}).lean();
 
-app.post('/subscribe', bodyParser.json(), (req, res) => {
-  const subscription = req.body;
-  subscriptions.push(subscription);
-  res.status(201).json({});
-});
+    if (allSubs.length === 0) {
+      console.log('[PUSH] No subscriptions found in database');
+      return;
+    }
 
+    console.log(`[PUSH] Attempting to send "${title}" to ${allSubs.length} subscriptions`);
 
-// Function to send notifications
-function sendNotification(title, body) {
-  subscriptions.forEach(sub => {
-    webpush.sendNotification(sub, JSON.stringify({ title, body }))
-      .catch(err => console.error(err));
-  });
+    for (const doc of allSubs) {
+      const sub = doc.subscription;
+      try {
+        await webpush.sendNotification(
+          sub,
+          JSON.stringify({ title, body })
+        );
+        console.log(`[PUSH] Successfully sent "${title}" to user ${doc.user}`);
+      } catch (err) {
+        console.error(`[PUSH] Failed to send to user ${doc.user}:`, err.message || err);
+        
+        // Clean up invalid/expired subscriptions
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          await PushSubscription.deleteOne({ _id: doc._id });
+          console.log(`[PUSH] Removed expired/gone subscription for user ${doc.user}`);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[PUSH] Error fetching or sending notifications:', err);
+  }
 }
 
-// Morning reminder at 7 AM
+// Morning reminder at 7:00 AM IST
 cron.schedule('0 7 * * *', () => {
+  console.log('[CRON] Running morning reminder at 7 AM IST');
   sendNotification("ZenTrack Reminder 🌞", "Good morning! Don’t forget to mark your goals today.");
+}, {
+  timezone: "Asia/Kolkata"
 });
 
-// Night reminder at 10 PM
+// Night reminder at 10:00 PM IST
 cron.schedule('0 22 * * *', () => {
+  console.log('[CRON] Running night reminder at 10 PM IST');
   sendNotification("ZenTrack Reminder 🌙", "Day’s ending — check your progress before bed.");
+}, {
+  timezone: "Asia/Kolkata"
+});
+
+// ─── Subscribe endpoint ────────────────────────────────────────────────────────
+app.post('/subscribe', isAuthenticated, async (req, res) => {
+  try {
+    const subscription = req.body;
+
+    if (!subscription || !subscription.endpoint) {
+      return res.status(400).json({ error: 'Invalid subscription object' });
+    }
+
+    await PushSubscription.findOneAndUpdate(
+      { user: req.user._id },
+      { subscription, createdAt: new Date() },
+      { upsert: true, new: true }
+    );
+
+    console.log(`[PUSH] Subscription saved/updated for user ${req.user._id}`);
+    res.status(201).json({ success: true });
+  } catch (err) {
+    console.error('[PUSH] Save subscription error:', err);
+    res.status(500).json({ error: 'Failed to save subscription' });
+  }
 });
 
 // Server listen
 const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`ZenTrack running on port ${port}`));
+app.listen(port, () => {
+  console.log(`ZenTrack running on port ${port}`);
+  console.log(`Current server time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`);
+});
 
-// Example route
+// Example route (kept as you had it)
 app.get('/tracker', (req, res) => {
   res.render('tracker', { showGuide: true });  // or false
 });
