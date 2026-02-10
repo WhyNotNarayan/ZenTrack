@@ -2,12 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <title>ZenTrack | Welcome</title>
 </head>
 <body class="d-flex align-items-center justify-content-center">
+
+  <div class="bg-animations">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
 
   <div class="auth-wrapper">
     <% if (error) { %>
@@ -17,6 +23,7 @@
     <div class="flip-card" id="flipCard">
       <div class="flip-card-inner">
         
+        <!-- Login Side -->
         <div class="flip-card-front card-glass">
           <div class="brand-section">
             <h1 class="brand-logo">Zen<span>Track</span></h1>
@@ -43,6 +50,7 @@
           </div>
         </div>
 
+        <!-- Signup Side -->
         <div class="flip-card-back card-glass">
           <div class="brand-section">
             <h1 class="brand-logo">Zen<span>Track</span></h1>
@@ -58,7 +66,29 @@
             <input type="email" name="email" class="form-control-modern" placeholder="Email" required>
             <input type="text" name="username" class="form-control-modern" placeholder="Username" required>
             <input type="password" name="password" class="form-control-modern password-field" placeholder="Password" required>
-            <input type="tel" name="mobile" class="form-control-modern" placeholder="Mobile Number" required>
+
+            <!-- Mobile with +91 prefix -->
+            <div class="mb-3 position-relative">
+              <label for="mobile" class="form-label">Mobile Number</label>
+              <div class="input-group input-group-modern">
+                <span class="input-group-text bg-white border-end-0">+91</span>
+                <input 
+                  type="tel" 
+                  class="form-control <%= error ? 'is-invalid' : '' %>" 
+                  id="mobile" 
+                  name="mobile" 
+                  placeholder="Enter 10-digit number"
+                  pattern="[0-9]{10}" 
+                  maxlength="10"
+                  title="Please enter exactly 10 digits (0-9 only)"
+                  required
+                >
+              </div>
+              <div class="invalid-feedback">
+                Mobile number must be exactly 10 digits.
+              </div>
+            </div>
+
             <button type="submit" class="btn-modern mt-3">Get Started</button>
           </form>
 
@@ -66,16 +96,7 @@
             <span>Already a member?</span> <a href="#" onclick="flip()">Login</a>
           </div>
         </div>
-        <body class="d-flex align-items-center justify-content-center">
-            <div class="bg-animations">
-              <div class="blob blob-1"></div>
-              <div class="blob blob-2"></div>
-              <div class="blob blob-3"></div>
-            </div>
-          
-            <div class="auth-wrapper">
-            </div>
-          </body>
+
       </div>
     </div>
   </div>
@@ -101,6 +122,19 @@
         pupil.style.transform = `translate(${x}px, ${y}px)`;
       });
     });
+
+    // Mobile input: only digits + max 10
+    const mobileInput = document.getElementById('mobile');
+    if (mobileInput) {
+      mobileInput.addEventListener('input', function(e) {
+        // Only allow digits
+        this.value = this.value.replace(/\D/g, '');
+        // Never allow more than 10 digits
+        if (this.value.length > 10) {
+          this.value = this.value.slice(0, 10);
+        }
+      });
+    }
 
     // Handle Password Focus (Blink/Close effect)
     document.querySelectorAll('.password-field').forEach(field => {
