@@ -20,6 +20,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json()); // ← Added: needed for /subscribe JSON payload
 app.use(express.static('public'));
 
+
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('DB Connected'))
@@ -333,6 +334,39 @@ app.get('/analytics', isAuthenticated, async (req, res) => {
     completedCount,
     notCompletedCount
   });
+});
+
+app.post('/auth/google', async (req, res) => {
+  const { idToken } = req.body;
+
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const { email, name, picture, sub: googleId } = decodedToken;
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      user = new User({
+        email,
+        username: name?.replace(/\s+/g, '').toLowerCase() || email.split('@')[0],
+        password: 'google-auth-no-password',
+        mobile: '', // can ask later or skip
+        isFirstLogin: true,
+        googleId,
+        profilePic: picture
+      });
+      await user.save();
+    }
+
+    // Login with Passport (manual)
+    req.login(user, (err) => {
+      if (err) return res.status(500).json({ success: false });
+      res.json({ success: true });
+    });
+  } catch (error) {
+    console.error('Google auth error:', error);
+    res.status(401).json({ success: false, error: 'Invalid token' });
+  }
 });
 
 // Web Push Notifications
