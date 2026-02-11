@@ -44,16 +44,18 @@
             </div>
             <button type="submit" class="btn-modern mt-3">Sign In</button>
           </form>
-          <!-- Add below your existing login/signup forms -->
-<div class="text-center mt-4">
-  <p>or continue with</p>
-  <button id="googleLoginBtn" class="btn btn-outline-primary btn-lg w-75">
-    <i class="fab fa-google me-2"></i> Continue with Google
-  </button>
-</div>
+
+          <!-- Google button (only one, fixed ID) -->
+          <div class="text-center mt-4">
+            <p>or continue with</p>
+            <button id="googleLoginBtn" class="btn btn-outline-primary btn-lg w-75">
+              <i class="fab fa-google me-2"></i> Continue with Google
+            </button>
+          </div>
           
           <div class="footer-link">
-            <span>New here?</span> <a href="#" onclick="flip()">Create an account</a>
+            <span>New here?</span> 
+            <a href="#" class="flip-link">Create an account</a>
           </div>
         </div>
 
@@ -96,19 +98,20 @@
               </div>
             </div>
 
-            <!-- Add below your existing login/signup forms -->
-          <div class="text-center mt-4">
-          <p>or continue with</p>
-          <button id="googleLoginBtn" class="btn btn-outline-primary btn-lg w-75">
-         <i class="fab fa-google me-2"></i> Continue with Google
-       </button>
-      </div>
+            <!-- Google button (only one instance) -->
+            <div class="text-center mt-4">
+              <p>or continue with</p>
+              <button id="googleLoginBtn" class="btn btn-outline-primary btn-lg w-75">
+                <i class="fab fa-google me-2"></i> Continue with Google
+              </button>
+            </div>
 
             <button type="submit" class="btn-modern mt-3">Get Started</button>
           </form>
 
           <div class="footer-link">
-            <span>Already a member?</span> <a href="#" onclick="flip()">Login</a>
+            <span>Already a member?</span> 
+            <a href="#" class="flip-link">Login</a>
           </div>
         </div>
 
@@ -116,81 +119,99 @@
     </div>
   </div>
 
+  <!-- Firebase script must be type="module" and loaded before your main script -->
+  <script type="module" src="/firebase-config.js"></script>
+
   <script>
-    function flip() {
-      document.getElementById('flipCard').classList.toggle('flipped');
-    }
+    // Wait for DOM to be fully ready
+    document.addEventListener('DOMContentLoaded', function () {
 
-    // Modernized Eye Following Logic
-    document.addEventListener('mousemove', (e) => {
-      const pupils = document.querySelectorAll('.pupil');
-      pupils.forEach(pupil => {
-        const rect = pupil.parentElement.getBoundingClientRect();
-        const eyeX = rect.left + rect.width / 2;
-        const eyeY = rect.top + rect.height / 2;
-        const angle = Math.atan2(e.clientY - eyeY, e.clientX - eyeX);
-        const distance = 8; // Movement range
-        
-        const x = Math.cos(angle) * distance;
-        const y = Math.sin(angle) * distance;
-        
-        pupil.style.transform = `translate(${x}px, ${y}px)`;
-      });
-    });
-
-    // Mobile input: only digits + max 10
-    const mobileInput = document.getElementById('mobile');
-    if (mobileInput) {
-      mobileInput.addEventListener('input', function(e) {
-        // Only allow digits
-        this.value = this.value.replace(/\D/g, '');
-        // Never allow more than 10 digits
-        if (this.value.length > 10) {
-          this.value = this.value.slice(0, 10);
-        }
-      });
-    }
-
-    import { auth, googleProvider, signInWithPopup } from '/firebase-config.js';
-
-  const googleBtn = document.getElementById('googleLoginBtn');
-
-  if (googleBtn) {
-    googleBtn.addEventListener('click', async () => {
-      try {
-        const result = await signInWithPopup(auth, googleProvider);
-        const user = result.user;
-
-        // Get ID token to send to your backend
-        const idToken = await user.getIdToken();
-
-        // Send to your Express backend
-        const response = await fetch('/auth/google', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ idToken })
-        });
-
-        if (response.ok) {
-          window.location.href = '/'; // go to dashboard
+      // Flip function with safety check
+      function flipCard() {
+        const card = document.getElementById('flipCard');
+        if (card) {
+          card.classList.toggle('flipped');
         } else {
-          alert('Google login failed - please try again');
+          console.error('flipCard element not found');
         }
-      } catch (error) {
-        console.error('Google sign-in error:', error);
-        alert('Error: ' + error.message);
       }
-    });
-  }
 
-    // Handle Password Focus (Blink/Close effect)
-    document.querySelectorAll('.password-field').forEach(field => {
-      field.addEventListener('focus', () => {
-        document.querySelectorAll('.eye').forEach(eye => eye.classList.add('closed'));
+      // Attach flip to both links (using class instead of onclick)
+      document.querySelectorAll('.flip-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+          e.preventDefault(); // Prevent # jump
+          flipCard();
+        });
       });
-      field.addEventListener('blur', () => {
-        document.querySelectorAll('.eye').forEach(eye => eye.classList.remove('closed'));
+
+      // Eye following logic (unchanged)
+      document.addEventListener('mousemove', (e) => {
+        const pupils = document.querySelectorAll('.pupil');
+        pupils.forEach(pupil => {
+          const rect = pupil.parentElement.getBoundingClientRect();
+          const eyeX = rect.left + rect.width / 2;
+          const eyeY = rect.top + rect.height / 2;
+          const angle = Math.atan2(e.clientY - eyeY, e.clientX - eyeX);
+          const distance = 8;
+          
+          const x = Math.cos(angle) * distance;
+          const y = Math.sin(angle) * distance;
+          
+          pupil.style.transform = `translate(${x}px, ${y}px)`;
+        });
       });
+
+      // Mobile input restriction
+      const mobileInput = document.getElementById('mobile');
+      if (mobileInput) {
+        mobileInput.addEventListener('input', function(e) {
+          this.value = this.value.replace(/\D/g, '');
+          if (this.value.length > 10) {
+            this.value = this.value.slice(0, 10);
+          }
+        });
+      }
+
+      // Password focus effect
+      document.querySelectorAll('.password-field').forEach(field => {
+        field.addEventListener('focus', () => {
+          document.querySelectorAll('.eye').forEach(eye => eye.classList.add('closed'));
+        });
+        field.addEventListener('blur', () => {
+          document.querySelectorAll('.eye').forEach(eye => eye.classList.remove('closed'));
+        });
+      });
+
+      // Google sign-in (now using module import)
+      import('/firebase-config.js').then(module => {
+        const { auth, googleProvider, signInWithPopup } = module;
+
+        const googleBtn = document.getElementById('googleLoginBtn');
+        if (googleBtn) {
+          googleBtn.addEventListener('click', async () => {
+            try {
+              const result = await signInWithPopup(auth, googleProvider);
+              const user = result.user;
+              const idToken = await user.getIdToken();
+
+              const response = await fetch('/auth/google', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idToken })
+              });
+
+              if (response.ok) {
+                window.location.href = '/';
+              } else {
+                alert('Google login failed - please try again');
+              }
+            } catch (error) {
+              console.error('Google sign-in error:', error);
+              alert('Error: ' + error.message);
+            }
+          });
+        }
+      }).catch(err => console.error('Failed to load Firebase module:', err));
     });
   </script>
 </body>
