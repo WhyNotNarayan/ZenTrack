@@ -121,30 +121,31 @@
 
   <!-- Firebase script must be type="module" and loaded before your main script -->
   <script type="module" src="/firebase-config.js"></script>
-
   <script>
-    // Wait for DOM to be fully ready
-    document.addEventListener('DOMContentLoaded', function () {
-
-      // Flip function with safety check
-      function flipCard() {
-        const card = document.getElementById('flipCard');
-        if (card) {
-          card.classList.toggle('flipped');
-        } else {
-          console.error('flipCard element not found');
-        }
+    // Wait for everything to load
+    document.addEventListener('DOMContentLoaded', () => {
+      const flipCard = document.getElementById('flipCard');
+  
+      if (!flipCard) {
+        console.error('flipCard ID not found in DOM');
+        return;
       }
-
-      // Attach flip to both links (using class instead of onclick)
+  
+      // Flip function
+      function flip() {
+        flipCard.classList.toggle('flipped');
+        console.log('Flip triggered — current classes:', flipCard.classList);
+      }
+  
+      // Attach to links using class (safer than onclick)
       document.querySelectorAll('.flip-link').forEach(link => {
-        link.addEventListener('click', function(e) {
-          e.preventDefault(); // Prevent # jump
-          flipCard();
+        link.addEventListener('click', e => {
+          e.preventDefault();
+          flip();
         });
       });
-
-      // Eye following logic (unchanged)
+  
+      // Your eye following logic (unchanged)
       document.addEventListener('mousemove', (e) => {
         const pupils = document.querySelectorAll('.pupil');
         pupils.forEach(pupil => {
@@ -160,7 +161,7 @@
           pupil.style.transform = `translate(${x}px, ${y}px)`;
         });
       });
-
+  
       // Mobile input restriction
       const mobileInput = document.getElementById('mobile');
       if (mobileInput) {
@@ -171,7 +172,7 @@
           }
         });
       }
-
+  
       // Password focus effect
       document.querySelectorAll('.password-field').forEach(field => {
         field.addEventListener('focus', () => {
@@ -181,37 +182,12 @@
           document.querySelectorAll('.eye').forEach(eye => eye.classList.remove('closed'));
         });
       });
-
-      // Google sign-in (now using module import)
-      import('/firebase-config.js').then(module => {
-        const { auth, googleProvider, signInWithPopup } = module;
-
-        const googleBtn = document.getElementById('googleLoginBtn');
-        if (googleBtn) {
-          googleBtn.addEventListener('click', async () => {
-            try {
-              const result = await signInWithPopup(auth, googleProvider);
-              const user = result.user;
-              const idToken = await user.getIdToken();
-
-              const response = await fetch('/auth/google', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idToken })
-              });
-
-              if (response.ok) {
-                window.location.href = '/';
-              } else {
-                alert('Google login failed - please try again');
-              }
-            } catch (error) {
-              console.error('Google sign-in error:', error);
-              alert('Error: ' + error.message);
-            }
-          });
-        }
-      }).catch(err => console.error('Failed to load Firebase module:', err));
+  
+      // Firebase Google sign-in (if you want to keep it)
+      // import('/firebase-config.js').then(module => {
+      //   const { auth, googleProvider, signInWithPopup } = module;
+      //   // ... your Google code ...
+      // }).catch(err => console.error('Firebase load failed:', err));
     });
   </script>
 </body>
