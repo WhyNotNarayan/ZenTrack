@@ -25,61 +25,65 @@
         
         <!-- Login Side -->
         <div class="flip-card-front card-glass">
-          <div class="brand-section">
+          <div class="brand-section text-center">
             <h1 class="brand-logo">Zen<span>Track</span></h1>
             <p class="subtitle">Welcome back! Please login.</p>
           </div>
 
-          <div class="mascot-container">
+          <div class="mascot-container justify-content-center">
             <div class="eye"><div class="pupil"></div></div>
             <div class="eye"><div class="pupil"></div></div>
           </div>
 
           <form action="/login" method="POST" class="auth-form">
-            <div class="input-group-modern">
-              <input type="email" name="email" placeholder="Email Address" required>
+            <div class="mb-3">
+              <input type="email" name="email" class="form-control-modern" placeholder="Email Address" required>
             </div>
-            <div class="input-group-modern">
-              <input type="password" name="password" class="password-field" placeholder="Password" required>
+            <div class="mb-3">
+              <input type="password" name="password" class="form-control-modern password-field" placeholder="Password" required>
             </div>
-            <button type="submit" class="btn-modern mt-3">Sign In</button>
+            <button type="submit" class="btn-modern w-100">Sign In</button>
           </form>
 
-          <!-- Single Google button -->
           <div class="text-center mt-4">
-            <p>or continue with</p>
-            <button id="googleLoginBtn" class="btn btn-outline-primary btn-lg w-75">
+            <p class="mb-2">or continue with</p>
+            <button id="googleLoginBtn" class="btn btn-outline-primary w-75">
               <i class="fab fa-google me-2"></i> Continue with Google
             </button>
           </div>
-          
-          <div class="footer-link">
+
+          <div class="footer-link text-center mt-4">
             <span>New here?</span> 
-            <a href="#" class="flip-link">Create an account</a>
+            <a href="#" class="flip-link ms-2">Create an account</a>
           </div>
         </div>
 
         <!-- Signup Side -->
         <div class="flip-card-back card-glass">
-          <div class="brand-section">
+          <div class="brand-section text-center">
             <h1 class="brand-logo">Zen<span>Track</span></h1>
             <p class="subtitle">Join the community today.</p>
           </div>
 
-          <div class="mascot-container">
+          <div class="mascot-container justify-content-center">
             <div class="eye"><div class="pupil"></div></div>
             <div class="eye"><div class="pupil"></div></div>
           </div>
 
           <form action="/signup" method="POST" class="auth-form">
-            <input type="email" name="email" class="form-control-modern" placeholder="Email" required>
-            <input type="text" name="username" class="form-control-modern" placeholder="Username" required>
-            <input type="password" name="password" class="form-control-modern password-field" placeholder="Password" required>
+            <div class="mb-3">
+              <input type="email" name="email" class="form-control-modern" placeholder="Email" required>
+            </div>
+            <div class="mb-3">
+              <input type="text" name="username" class="form-control-modern" placeholder="Username" required>
+            </div>
+            <div class="mb-3">
+              <input type="password" name="password" class="form-control-modern password-field" placeholder="Password" required>
+            </div>
 
-            <!-- Mobile with +91 prefix -->
-            <div class="mb-4 position-relative">
-              <label for="mobile" class="form-label">Mobile Number</label>
-              <div class="input-group input-group-modern">
+            <div class="mb-4">
+              <label for="mobile" class="form-label d-block text-center mb-1">Mobile Number</label>
+              <div class="input-group input-group-modern mx-auto" style="max-width: 320px;">
                 <span class="input-group-text bg-white border-end-0">+91</span>
                 <input 
                   type="tel" 
@@ -93,25 +97,24 @@
                   required
                 >
               </div>
-              <div class="invalid-feedback">
+              <div class="invalid-feedback text-center">
                 Mobile number must be exactly 10 digits.
               </div>
             </div>
 
-            <!-- Single Google button – moved here for better spacing -->
-            <div class="text-center mt-4 mb-3">
-              <p>or continue with</p>
-              <button id="googleLoginBtn" class="btn btn-outline-primary btn-lg w-75">
+            <div class="text-center mt-3 mb-4">
+              <p class="mb-2 small">or continue with</p>
+              <button id="googleLoginBtn" class="btn btn-outline-primary w-75">
                 <i class="fab fa-google me-2"></i> Continue with Google
               </button>
             </div>
 
-            <button type="submit" class="btn-modern mt-3">Get Started</button>
+            <button type="submit" class="btn-modern w-100">Get Started</button>
           </form>
 
-          <div class="footer-link mt-4">
+          <div class="footer-link text-center mt-4">
             <span>Already a member?</span> 
-            <a href="#" class="flip-link">Login</a>
+            <a href="#" class="flip-link ms-2">Login</a>
           </div>
         </div>
 
@@ -119,24 +122,19 @@
     </div>
   </div>
 
-  <!-- Firebase script (if you want Google sign-in later) -->
-  <!-- <script type="module" src="/firebase-config.js"></script> -->
-
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const flipCard = document.getElementById('flipCard');
 
       if (!flipCard) {
-        console.error('flipCard ID not found in DOM');
+        console.error('flipCard not found');
         return;
       }
 
       function flip() {
         flipCard.classList.toggle('flipped');
-        console.log('Flip triggered — current classes:', flipCard.classList);
       }
 
-      // Attach flip to links
       document.querySelectorAll('.flip-link').forEach(link => {
         link.addEventListener('click', e => {
           e.preventDefault();
@@ -144,42 +142,32 @@
         });
       });
 
-      // Eye following logic
+      // Eye following
       document.addEventListener('mousemove', (e) => {
-        const pupils = document.querySelectorAll('.pupil');
-        pupils.forEach(pupil => {
+        document.querySelectorAll('.pupil').forEach(pupil => {
           const rect = pupil.parentElement.getBoundingClientRect();
           const eyeX = rect.left + rect.width / 2;
           const eyeY = rect.top + rect.height / 2;
           const angle = Math.atan2(e.clientY - eyeY, e.clientX - eyeX);
           const distance = 8;
-          
           const x = Math.cos(angle) * distance;
           const y = Math.sin(angle) * distance;
-          
           pupil.style.transform = `translate(${x}px, ${y}px)`;
         });
       });
 
-      // Mobile input restriction
-      const mobileInput = document.getElementById('mobile');
-      if (mobileInput) {
-        mobileInput.addEventListener('input', function(e) {
-          this.value = this.value.replace(/\D/g, '');
-          if (this.value.length > 10) {
-            this.value = this.value.slice(0, 10);
-          }
+      // Mobile restriction
+      const mobile = document.getElementById('mobile');
+      if (mobile) {
+        mobile.addEventListener('input', e => {
+          e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
         });
       }
 
-      // Password focus effect
+      // Password eye close
       document.querySelectorAll('.password-field').forEach(field => {
-        field.addEventListener('focus', () => {
-          document.querySelectorAll('.eye').forEach(eye => eye.classList.add('closed'));
-        });
-        field.addEventListener('blur', () => {
-          document.querySelectorAll('.eye').forEach(eye => eye.classList.remove('closed'));
-        });
+        field.addEventListener('focus', () => document.querySelectorAll('.eye').forEach(e => e.classList.add('closed')));
+        field.addEventListener('blur', () => document.querySelectorAll('.eye').forEach(e => e.classList.remove('closed')));
       });
     });
   </script>
