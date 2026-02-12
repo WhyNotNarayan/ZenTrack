@@ -20,6 +20,18 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json()); // ← Added: needed for /subscribe JSON payload
 app.use(express.static('public'));
 
+// Keep-alive ping to prevent Render free tier sleep
+app.get('/ping', (req, res) => {
+  res.send('pong');
+});
+
+// Self-ping every 10 minutes to stay awake longer
+setInterval(() => {
+  fetch('https://zentrack-pvdc.onrender.com/ping')  // ← CHANGE THIS LINE
+    .then(() => console.log('Self-ping success - app staying awake'))
+    .catch(err => console.log('Self-ping failed:', err.message));
+}, 10 * 60 * 1000); // 10 minutes
+
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
@@ -464,3 +476,4 @@ app.listen(port, () => {
 app.get('/tracker', (req, res) => {
   res.render('tracker', { showGuide: true });  // or false
 });
+
