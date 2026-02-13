@@ -1,16 +1,13 @@
-This is a solid foundation! To make your README truly professional and "star-worthy," we need to improve the visual hierarchy, use cleaner typography, and add some high-impact sections like a "Quick Start" and "Visual Preview."
-
-Here is a revamped, professional version of your **ZenTrack** README.
-
+Live Link:-https://zentrack-pvdc.onrender.com
 ---
 
 # 🌿 ZenTrack – Daily Habit & Goal Tracker
 
 <p align="center">
-<img src="[https://img.shields.io/badge/Status-Live-success?style=for-the-badge&logo=render](https://www.google.com/search?q=https://img.shields.io/badge/Status-Live-success%3Fstyle%3Dfor-the-badge%26logo%3Drender)" alt="Status">
-<img src="[https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white](https://www.google.com/search?q=https://img.shields.io/badge/Node.js-339933%3Fstyle%3Dfor-the-badge%26logo%3Dnodedotjs%26logoColor%3Dwhite)" alt="Node.js">
-<img src="[https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white](https://www.google.com/search?q=https://img.shields.io/badge/MongoDB-47A248%3Fstyle%3Dfor-the-badge%26logo%3Dmongodb%26logoColor%3Dwhite)" alt="MongoDB">
-<img src="[https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white](https://www.google.com/search?q=https://img.shields.io/badge/Express.js-000000%3Fstyle%3Dfor-the-badge%26logo%3Dexpress%26logoColor%3Dwhite)" alt="Express">
+  <img src="https://img.shields.io/badge/Status-Live-success?style=for-the-badge&logo=render&logoColor=white" alt="Status">
+  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js">
+  <img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB">
+  <img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express">
 </p>
 
 <p align="center">
