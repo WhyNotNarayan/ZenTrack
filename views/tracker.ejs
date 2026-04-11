@@ -5,47 +5,43 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="/dashboard.css">
   <title>ZenTrack - Monthly Tracker</title>
 </head>
 <body class="dashboard-body">
 
-<!-- Guide Overlay (only shown for first-time users) -->
+  <!-- Premium Background Orbs -->
+  <div class="dashboard-bg">
+    <div class="d-orb d-orb-1"></div>
+    <div class="d-orb d-orb-2"></div>
+  </div>
+
+<!-- Guide Overlay -->
 <div id="onboarding-guide" class="onboarding-guide" style="display: none;">
   <div class="guide-backdrop"></div>
-  
   <div class="guide-content">
     <div class="guide-step" id="step-1">
       <h2>Welcome to ZenTrack! 🌟</h2>
-      <p>This is your <strong>Tracker</strong> — your daily dashboard.<br>
-         Here you mark which goals you completed today.<br>
-         Small daily wins = big life changes!</p>
+      <p>This is your <strong>Tracker</strong> — your daily dashboard.<br>Small daily wins = big life changes!</p>
       <div class="guide-actions">
         <button class="btn-skip" onclick="skipGuide()">Skip tour</button>
         <button class="btn-next" onclick="nextStep(2)">Next →</button>
       </div>
     </div>
-
     <div class="guide-step" id="step-2" style="display:none;">
       <h2>Manage Goals</h2>
-      <p>Click here to <strong>add, edit or delete</strong> your goals.<br>
-         Example: "Drink 3L water", "Exercise 30 min", "Read 20 pages" etc.<br>
-         Whatever you want to achieve — add it here!</p>
+      <p>Click here to <strong>add, edit or delete</strong> your goals.</p>
       <div class="guide-actions">
         <button class="btn-prev" onclick="prevStep(1)">← Previous</button>
         <button class="btn-skip" onclick="skipGuide()">Skip tour</button>
         <button class="btn-next" onclick="nextStep(3)">Next →</button>
       </div>
     </div>
-
     <div class="guide-step" id="step-3" style="display:none;">
       <h2>Analytics & Progress</h2>
-      <p>Here you can see your <strong>progress over time</strong>.<br>
-         Beautiful graphs show:<br>
-         • Daily completion %<br>
-         • Monthly trends<br>
-         • How consistent you're becoming</p>
+      <p>Here you can see your <strong>progress over time</strong> with beautiful graphs.</p>
       <div class="guide-actions">
         <button class="btn-prev" onclick="prevStep(2)">← Previous</button>
         <button class="btn-skip" onclick="skipGuide()">Skip tour</button>
@@ -63,361 +59,237 @@
       <a href="/" class="nav-item active"><i class="fas fa-calendar-check"></i> Tracker</a>
       <a href="/goals" class="nav-item"><i class="fas fa-plus-circle"></i> Manage Goals</a>
       <a href="/analytics" class="nav-item"><i class="fas fa-chart-pie"></i> Analytics</a>
+      <a href="/history" class="nav-item"><i class="fas fa-history"></i> History</a>
     </nav>
-   <div class="sidebar-footer">
-  <div class="user-pill">
-    <div>
-      <p class="u-name"><%= user.username %></p>
-      <p class="u-email"><%= user.email %></p> <!-- 👈 Added line -->
-      <a href="/logout" class="logout-link">Logout</a>
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <p class="u-name"><%= user.username %></p>
+        <p class="u-email"><%= user.email %></p>
+        <a href="/logout" class="logout-link">Logout</a>
+      </div>
     </div>
-  </div>
-</div>
   </aside>
 
- <main class="main-content container-fluid">
-  <header class="top-bar d-flex flex-wrap justify-content-between align-items-center">
-    <div class="d-flex align-items-center">
-      <!-- Toggle button for mobile -->
-      <button class="btn btn-outline-primary d-md-none me-2" id="sidebarToggle">
-        <i class="fas fa-bars"></i>
-      </button>
-      <h1><%= currentMonth %> Tracker</h1>
-    </div>
+  <main class="main-content container-fluid">
+    <header class="top-bar d-flex flex-wrap justify-content-between align-items-center">
+      <div class="d-flex align-items-center">
+        <button class="btn btn-outline-primary d-lg-none me-2" id="sidebarToggle">
+          <i class="fas fa-bars"></i>
+        </button>
+        <h1><%= currentMonth %> Tracker</h1>
+      </div>
+      <div class="d-flex align-items-center">
+        <div id="liveClock"></div>
+      </div>
+    </header>
 
-  
-    <div class="d-flex align-items-center">
-  <i id="notificationBell" class="fas fa-bell text-secondary fs-4" style="cursor:pointer"></i>
-  <div id="liveClock" class="ms-3"></div>
-</div>
-  
-    <div id="liveClock"></div>
-  </header>
-
-  <div class="grid-container-card">
-    <div class="table-responsive grid-viewport">
-      <table class="zen-grid table table-bordered">
-        <thead>
-          <tr class="day-label-row">
-            <th class="corner-label">GOALS</th>
-            <th colspan="<%= dates.length %>" class="main-day-header">DAY</th>
-          </tr>
-          <tr class="date-number-row">
-            <th class="sticky-goal-header"></th> 
-            <% dates.forEach(date => { %>
-              <th class="date-col-header">
-                <%= moment(date).format('D') %>
-              </th>
-            <% }) %>
-          </tr>
-        </thead>
-        <tbody>
-         <% goals.forEach(goal => { %>
-          <tr>
-            <td class="sticky-goal-column">
-              <div class="goal-name-wrapper">
-                <%= goal.name %>
-              </div>
-            </td>
-
-            <% dates.forEach(date => { 
-              const isDisabled = moment(date).isAfter(moment().startOf('day'));
-              const track = tracks.find(t => 
-                t.goal && t.goal.toString() === goal._id.toString() && 
-                moment(t.date).isSame(date, 'day')
-              ); 
-            %>
-              <td class="grid-checkbox-cell" style="background-color: <%= !isDisabled && (!track || !track.completed) && moment(date).isBefore(moment().startOf('day')) ? '#d3d3d3' : (isDisabled && (!track || !track.completed) ? '#f0f0f0' : 'transparent') %>">
-                <form action="/tracker" method="POST">
-                  <input type="hidden" name="date" value="<%= moment(date).format('YYYY-MM-DD') %>">
-                  <input type="hidden" name="goalId" value="<%= goal._id %>">
-                  <label class="grid-check">
-                    <input type="checkbox" name="completed" 
-                      <%= track && track.completed ? 'checked' : '' %>
-                      <%= isDisabled ? 'disabled' : '' %>
-                      onchange="this.form.submit()">
-                    <span class="checkmark-ui"></span>
-                  </label>
-                </form>
+    <div class="grid-container-card">
+      <div class="table-responsive grid-viewport">
+        <table class="zen-grid table table-bordered">
+          <thead>
+            <tr class="day-label-row">
+              <th class="corner-label">GOALS</th>
+              <th colspan="<%= dates.length %>" class="main-day-header">DAY</th>
+            </tr>
+            <tr class="date-number-row">
+              <th class="sticky-goal-header"></th> 
+              <% dates.forEach(date => { %>
+                <th class="date-col-header">
+                  <%= moment(date).format('D') %>
+                </th>
+              <% }) %>
+            </tr>
+          </thead>
+          <tbody>
+           <% goals.forEach(goal => { %>
+            <tr>
+              <td class="sticky-goal-column">
+                <div class="goal-name-wrapper">
+                  <%= goal.name %>
+                </div>
               </td>
-            <% }) %>
-          </tr>
-        <% }) %>
-        </tbody>
-      </table>
+              <% dates.forEach(date => { 
+                const isoDate = moment(date).format('YYYY-MM-DD');
+                const isDisabled = moment(date).isAfter(moment().startOf('day'));
+                const track = tracks.find(t => 
+                  t.goal && t.goal.toString() === goal._id.toString() && 
+                  moment(t.date).isSame(date, 'day')
+                ); 
+              %>
+                <td class="grid-checkbox-cell" style="background-color: <%= !isDisabled && (!track || !track.completed) && moment(date).isBefore(moment().startOf('day')) ? 'rgba(0,0,0,0.03)' : 'transparent' %>">
+                    <label class="grid-check">
+                      <input type="checkbox" class="tracker-check"
+                        data-date="<%= isoDate %>"
+                        data-goal-id="<%= goal._id %>"
+                        <%= track && track.completed ? 'checked' : '' %>
+                        <%= isDisabled ? 'disabled' : '' %>>
+                      <span class="checkmark-ui"></span>
+                    </label>
+                </td>
+              <% }) %>
+            </tr>
+          <% }) %>
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
 
-  <div class="growth-analysis mt-4">
-    <h2>User Growth Analysis</h2>
-    <p>Small wins each day add up to big changes—keep moving, you’re building something powerful.</p>
-    
-    <!-- Bar Chart for Daily Growth -->
-    <div class="chart-card mt-3">
+    <div class="chart-card mt-5">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+           <h2 class="mb-1">Progress Analysis</h2>
+           <p class="text-muted mb-0">Live tracking of your daily consistency.</p>
+        </div>
+        <div id="savingIndicator" style="display:none;">
+           <span class="badge bg-primary px-3 py-2"><i class="fas fa-sync fa-spin me-2"></i> Saving...</span>
+        </div>
+      </div>
       <canvas id="dailyGrowthChart"></canvas>
     </div>
-  </div>
-</main>
+  </main>
 
-<script>
-// ──────────────────────────────────────────────
-// Sidebar mobile toggle
-// ──────────────────────────────────────────────
-document.getElementById('sidebarToggle')?.addEventListener('click', () => {
-  document.querySelector('.sidebar')?.classList.toggle('active');
-});
-
-// ──────────────────────────────────────────────
-// Live Clock
-// ──────────────────────────────────────────────
-function updateClock() {
-  const now = new Date();
-  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  const dateString = now.toLocaleDateString('en-US', options);
-  const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const clockEl = document.getElementById('liveClock');
-  if (clockEl) clockEl.innerHTML = `${dateString} | ${timeString}`;
-}
-setInterval(updateClock, 1000);
-updateClock();
-
-// ──────────────────────────────────────────────
-// Push Notifications – improved version
-// ──────────────────────────────────────────────
-async function registerAndSubscribe() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    console.log("Push not supported in this browser");
-    return;
-  }
-
-  try {
-    const reg = await navigator.serviceWorker.register('/sw.js');
-    console.log('Service Worker registered');
-
-    let permission = Notification.permission;
-    if (permission === 'default') {
-      permission = await Notification.requestPermission();
-    }
-
-    if (permission !== 'granted') {
-      console.log('Notification permission not granted');
-      updateBellIcon();
-      return;
-    }
-
-    const subscription = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array('<%= process.env.VAPID_PUBLIC_KEY %>')
+  <script>
+    // Initial Data from EJS
+    const rawDates = <%- JSON.stringify(dates.map(d => moment(d).format("YYYY-MM-DD"))) %>;
+    const goalCount = <%= goals.length %>;
+    
+    // Map initial tracks to a format easy for JS manipulation: { "YYYY-MM-DD": countOfCompleted }
+    const tracksMap = {};
+    rawDates.forEach(date => {
+       tracksMap[date] = 0;
     });
 
-    const res = await fetch('/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(subscription)
+    // Populate tracksMap from existing data
+    <% tracks.forEach(t => { %>
+        <% if (t.completed) { %>
+            tracksMap["<%= moment(t.date).format('YYYY-MM-DD') %>"] = (tracksMap["<%= moment(t.date).format('YYYY-MM-DD') %>"] || 0) + 1;
+        <% } %>
+    <% }) %>
+
+    // Sidebar Toggle
+    document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+      document.querySelector('.sidebar')?.classList.toggle('active');
     });
 
-    if (res.ok) {
-      console.log('Push subscription sent to server successfully');
-      updateBellIcon();
-    } else {
-      console.error('Failed to send subscription to server');
+    // Clock
+    function updateClock() {
+      const now = new Date();
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const dateString = now.toLocaleDateString('en-US', options);
+      const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      document.getElementById('liveClock').innerHTML = `${dateString} | ${timeString}`;
     }
-  } catch (err) {
-    console.error('Push registration/subscription failed:', err);
-    updateBellIcon();
-  }
-}
+    setInterval(updateClock, 1000);
+    updateClock();
 
-// Run on page load
-if ('serviceWorker' in navigator) {
-  registerAndSubscribe();
-}
+    // Chart Configuration
+    const chartLabels = rawDates.map(d => {
+       const [y, m, day] = d.split('-');
+       return day;
+    });
 
-function updateBellIcon() {
-  const bell = document.getElementById('notificationBell');
-  if (!bell) return;
+    const getChartData = () => rawDates.map(date => {
+       return goalCount > 0 ? ((tracksMap[date] || 0) / goalCount * 100).toFixed(1) : 0;
+    });
 
-  if (Notification.permission === 'granted') {
-    bell.className = 'fas fa-bell text-success fs-4';
-    bell.title = 'Notifications enabled';
-  } else if (Notification.permission === 'denied') {
-    bell.className = 'fas fa-bell-slash text-danger fs-4';
-    bell.title = 'Notifications blocked';
-  } else {
-    bell.className = 'fas fa-bell text-secondary fs-4';
-    bell.title = 'Click to enable notifications';
-  }
-}
+    const ctx = document.getElementById('dailyGrowthChart').getContext('2d');
+    const growthChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: chartLabels,
+        datasets: [{
+          label: 'Completion (%)',
+          data: getChartData(),
+          borderColor: '#6366f1',
+          backgroundColor: 'rgba(99, 102, 241, 0.1)',
+          borderWidth: 3,
+          tension: 0.4,
+          fill: true,
+          pointRadius: 4,
+          pointBackgroundColor: '#6366f1'
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, max: 100, grid: { color: 'rgba(0,0,0,0.05)' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
 
-document.getElementById('notificationBell')?.addEventListener('click', () => {
-  if (Notification.permission === 'granted') {
-    alert('Notifications already enabled. To disable, go to browser settings.');
-    return;
-  }
-  registerAndSubscribe();
-});
+    // AJAX Checkbox Handler
+    document.querySelectorAll('.tracker-check').forEach(check => {
+      check.addEventListener('change', async (e) => {
+        const target = e.target;
+        const date = target.dataset.date;
+        const goalId = target.dataset.goalId;
+        const completed = target.checked;
+        const indicator = document.getElementById('savingIndicator');
 
-// ──────────────────────────────────────────────
-// Daily Growth Chart
-// ──────────────────────────────────────────────
-const labels = <%- JSON.stringify(dates.map(d => moment(d).format("D MMM"))) %>;
-const dataValues = <%- JSON.stringify(dates.map(date => {
-  const tracksForDate = tracks.filter(t => moment(t.date).isSame(date, 'day'));
-  const completedTracks = tracksForDate.filter(t => t.completed).length;
-  return goals.length > 0 ? (completedTracks / goals.length * 100).toFixed(2) : 0;
-})) %>;
+        // Optimistic UI Update for Map
+        if (completed) tracksMap[date]++;
+        else tracksMap[date]--;
 
-new Chart(document.getElementById('dailyGrowthChart'), {
-  type: 'bar',
-  data: {
-    labels: labels,
-    datasets: [{
-      label: 'Daily Growth (%)',
-      data: dataValues,
-      backgroundColor: '#6366f1',
-      borderRadius: 6
-    }]
-  },
-  options: {
-    responsive: true,
-    plugins: { legend: { display: false } },
-    scales: {
-      y: { beginAtZero: true, max: 100, title: { display: true, text: 'Completion %' } },
-      x: { title: { display: true, text: 'Day' } }
-    }
-  }
-});
+        // Update Chart
+        growthChart.data.datasets[0].data = getChartData();
+        growthChart.update('none'); // silent update
 
-// ──────────────────────────────────────────────
-// Push Notifications (cleaned – only one listener)
-// ──────────────────────────────────────────────
-async function initPush() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    console.log("Push notifications not supported");
-    return;
-  }
+        // UI Feedback
+        indicator.style.display = 'block';
+        target.parentElement.style.opacity = '0.5';
 
-  try {
-    const reg = await navigator.serviceWorker.register('/sw.js');
-    const permission = await Notification.requestPermission();
+        try {
+          const response = await fetch('/tracker', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ date, goalId, completed })
+          });
 
-    if (permission === 'granted') {
-      const subscription = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: '<%= process.env.VAPID_PUBLIC_KEY %>'
+          if (!response.ok) throw new Error('Update failed');
+          
+        } catch (err) {
+          console.error(err);
+          // Revert on error
+          target.checked = !completed;
+          if (completed) tracksMap[date]--;
+          else tracksMap[date]++;
+          growthChart.data.datasets[0].data = getChartData();
+          growthChart.update();
+          alert('Failed to update. Reverting changes.');
+        } finally {
+          target.parentElement.style.opacity = '1';
+          setTimeout(() => { indicator.style.display = 'none'; }, 500);
+        }
       });
+    });
 
-      await fetch('/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(subscription)
+    // Onboarding logic
+    <% if (showGuide) { %>
+      document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('onboarding-guide').style.display = 'block';
+        showStep(1);
       });
-      updateBellIcon();
+    <% } %>
+
+    let currentGuideStep = 1;
+    function showStep(step) {
+      currentGuideStep = step;
+      document.querySelectorAll('.guide-step').forEach(el => el.style.display = 'none');
+      document.getElementById(`step-${step}`).style.display = 'block';
     }
-  } catch (err) {
-    console.error("Push setup failed:", err);
-  }
-}
-
-function updateBellIcon() {
-  const bell = document.getElementById('notificationBell');
-  if (!bell) return;
-
-  if (Notification.permission === "granted") {
-    bell.className = "fas fa-bell text-success fs-4";
-    bell.title = "Notifications enabled";
-  } else if (Notification.permission === "denied") {
-    bell.className = "fas fa-bell-slash text-danger fs-4";
-    bell.title = "Notifications blocked";
-  } else {
-    bell.className = "fas fa-bell text-secondary fs-4";
-    bell.title = "Notifications not allowed yet";
-  }
-}
-
-document.getElementById('notificationBell')?.addEventListener('click', async () => {
-  if (Notification.permission === "granted") {
-    alert("Notifications are already enabled. Manage them in browser settings.");
-    return;
-  }
-
-  const permission = await Notification.requestPermission();
-  updateBellIcon();
-
-  if (permission === "granted") {
-    await initPush();
-    alert("Notifications enabled! 🎉");
-  } else if (permission === "denied") {
-    alert("Notifications blocked. Please enable them in browser settings.");
-  }
-});
-
-updateBellIcon(); // initial state
-
-// ──────────────────────────────────────────────
-// Onboarding Guide (new version – only this one!)
-// ──────────────────────────────────────────────
-
-<% if (showGuide) { %>
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('onboarding-guide').style.display = 'block';
-  showStep(1);
-});
-<% } %>
-
-let currentGuideStep = 1;
-
-function showStep(step) {
-  currentGuideStep = step;
-
-  document.querySelectorAll('.guide-step').forEach(el => el.style.display = 'none');
-  const current = document.getElementById(`step-${step}`);
-  if (current) current.style.display = 'block';
-
-  removeAllHighlights();
-
-  if (step === 2) {
-    highlightElement('.nav-item[href="/goals"]');
-  } else if (step === 3) {
-    highlightElement('.nav-item[href="/analytics"]');
-  }
-}
-
-function highlightElement(selector) {
-  const el = document.querySelector(selector);
-  if (el) {
-    el.classList.add('guide-highlight');
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
-}
-
-function removeAllHighlights() {
-  document.querySelectorAll('.guide-highlight').forEach(el => {
-    el.classList.remove('guide-highlight');
-  });
-}
-
-function nextStep(step) {
-  showStep(step);
-}
-
-function prevStep(step) {
-  showStep(step);
-}
-
-function skipGuide() {
-  finishGuide(true);
-}
-
-function finishGuide(silent = false) {
-  const guide = document.getElementById('onboarding-guide');
-  if (guide) guide.style.display = 'none';
-  removeAllHighlights();
-
-  if (!silent) {
-    alert("Great! You're all set. Start building your habits today! 💪");
-  }
-}
-</script>
+    function nextStep(step) { showStep(step); }
+    function prevStep(step) { showStep(step); }
+    function skipGuide() { finishGuide(true); }
+    function finishGuide(silent = false) {
+      document.getElementById('onboarding-guide').style.display = 'none';
+      if (!silent) alert("Process completed smoothly! Start building your habits today! 💪");
+    }
+  </script>
 </body>
 </html>
