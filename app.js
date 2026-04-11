@@ -13,6 +13,8 @@ const Goal = require('./models/Goal');
 const DailyTrack = require('./models/DailyTrack');
 const User = require('./models/User');
 const PushSubscription = require('./models/PushSubscription');
+const { OAuth2Client } = require('google-auth-library');
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const app = express();
 app.set('view engine', 'ejs');
@@ -27,7 +29,8 @@ app.get('/ping', (req, res) => {
 
 // Self-ping every 10 minutes to stay awake longer
 setInterval(() => {
-  fetch('https://zentrack-pvdc.onrender.com/ping')  // ← CHANGE THIS LINE
+  const host = process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || 3000}`;
+  fetch(`${host}/ping`)
     .then(() => console.log('Self-ping success - app staying awake'))
     .catch(err => console.log('Self-ping failed:', err.message));
 }, 10 * 60 * 1000); // 10 minutes
@@ -81,20 +84,14 @@ function isAuthenticated(req, res, next) {
   res.redirect('/login');
 }
 
-// Init daily tracks function
-async function initDailyTracks(date, userId) {
-  const goals = await Goal.find({ user: userId });
-  for (let goal of goals) {
-    const exists = await DailyTrack.findOne({ date, goal: goal._id, user: userId });
-    if (!exists) {
-      await new DailyTrack({ date, goal: goal._id, user: userId }).save();
-    }
-  }
-}
+// initDailyTracks removed for better performance. Tracks are now created on-demand.
 
 // Auth page (combined login/signup)
 app.get('/auth', (req, res) => {
-  res.render('auth', { error: req.session.messages ? req.session.messages[0] : null });
+  res.render('auth', { 
+    error: req.session.messages ? req.session.messages[0] : null,
+    googleClientId: process.env.GOOGLE_CLIENT_ID 
+  });
 });
 
 // Signup
@@ -184,12 +181,14 @@ app.get('/toggle-theme', isAuthenticated, (req, res) => {
 // Home route
 app.get('/', isAuthenticated, async (req, res) => {
   const today = moment().startOf('day').toDate();
-  const goals = await Goal.find({ user: req.user._id });
-  const tracks = await DailyTrack.find({ user: req.user._id });
-
-  // Monthly data
   const currentMonth = moment().startOf('month');
   const monthEnd = moment().endOf('month');
+
+  const goals = await Goal.find({ user: req.user._id });
+  const tracks = await DailyTrack.find({ 
+    user: req.user._id,
+    date: { $gte: currentMonth.toDate(), $lte: monthEnd.toDate() }
+  });
   const dates = [];
   for (let d = currentMonth.clone(); d.isSameOrBefore(monthEnd, 'day'); d.add(1, 'day')) {
     dates.push(d.toDate());
@@ -202,7 +201,7 @@ app.get('/', isAuthenticated, async (req, res) => {
 
   const isPast = (date) => moment(date).isBefore(moment().startOf('day'));
 
-  await initDailyTracks(today, req.user._id);
+  // Removed initDailyTracks - dynamic creation on interaction is faster
 
   const data = [
     {
@@ -258,7 +257,12 @@ app.get('/goals', isAuthenticated, async (req, res) => {
 // Add a new goal
 app.post('/goals', isAuthenticated, async (req, res) => {
   const { name, time } = req.body;
-  await new Goal({ name, time, user: req.user._id }).save();
+  const goal = await new Goal({ name, time, user: req.user._id }).save();
+  
+  if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+    return res.json({ success: true, goal });
+  }
+  
   res.redirect('/goals');
 });
 
@@ -266,9 +270,17 @@ app.post('/goals/delete/:id', isAuthenticated, async (req, res) => {
   try {
     const goalId = req.params.id;
     await Goal.findByIdAndDelete(goalId);
+    
+    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+      return res.json({ success: true, id: goalId });
+    }
+    
     res.redirect('/goals');
   } catch (err) {
     console.error(err);
+    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+      return res.status(500).json({ error: 'Error deleting goal' });
+    }
     res.status(500).send('Error deleting goal');
   }
 });
@@ -313,9 +325,13 @@ app.post('/tracker', isAuthenticated, async (req, res) => {
 
   await DailyTrack.findOneAndUpdate(
     { date: trackDate, goal: goalId, user: req.user._id },
-    { completed: completed === 'on' },
+    { completed: completed === 'on' || completed === true },
     { upsert: true }
   );
+
+  if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+    return res.json({ success: true });
+  }
 
   res.redirect('/');
 });
@@ -344,7 +360,41 @@ app.get('/analytics', isAuthenticated, async (req, res) => {
     dates: JSON.stringify(dates),
     dataValues: JSON.stringify(dataValues),
     completedCount,
-    notCompletedCount
+    notCompletedCount,
+    user: req.user,
+    theme: req.session.theme
+  });
+});
+
+// History route
+app.get('/history', isAuthenticated, async (req, res) => {
+  const selectedMonth = req.query.month || moment().format('YYYY-MM');
+  const monthStart = moment(selectedMonth, 'YYYY-MM').startOf('month');
+  const monthEnd = moment(selectedMonth, 'YYYY-MM').endOf('month');
+
+  const goals = await Goal.find({ user: req.user._id });
+  const tracks = await DailyTrack.find({ 
+    user: req.user._id,
+    date: { $gte: monthStart.toDate(), $lte: monthEnd.toDate() }
+  });
+
+  const dates = [];
+  for (let d = monthStart.clone(); d.isSameOrBefore(monthEnd, 'day'); d.add(1, 'day')) {
+    dates.push(d.toDate());
+  }
+
+  const isPast = (date) => moment(date).isBefore(moment().startOf('day'));
+
+  res.render('history', {
+    goals,
+    tracks,
+    moment,
+    isPast,
+    user: req.user,
+    theme: req.session.theme,
+    selectedMonth: selectedMonth,
+    displayMonth: monthStart.format('MMMM YYYY'),
+    dates
   });
 });
 
@@ -352,8 +402,12 @@ app.post('/auth/google', async (req, res) => {
   const { idToken } = req.body;
 
   try {
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-    const { email, name, picture, sub: googleId } = decodedToken;
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { email, name, picture, sub: googleId } = payload;
 
     let user = await User.findOne({ email });
 
@@ -362,7 +416,7 @@ app.post('/auth/google', async (req, res) => {
         email,
         username: name?.replace(/\s+/g, '').toLowerCase() || email.split('@')[0],
         password: 'google-auth-no-password',
-        mobile: '', // can ask later or skip
+        mobile: '', 
         isFirstLogin: true,
         googleId,
         profilePic: picture
@@ -370,10 +424,9 @@ app.post('/auth/google', async (req, res) => {
       await user.save();
     }
 
-    // Login with Passport (manual)
     req.login(user, (err) => {
       if (err) return res.status(500).json({ success: false });
-      res.json({ success: true });
+      res.json({ success: true, redirectUrl: '/' });
     });
   } catch (error) {
     console.error('Google auth error:', error);
