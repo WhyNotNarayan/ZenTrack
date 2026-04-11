@@ -1,150 +1,124 @@
-/* Root variables */
+/* --- ZenTrack Analytics Premium Theme --- */
 :root {
   --primary: #6366f1;
-  --bg-app: #f1f5f9;
+  --bg-app: #f8fafc;
   --bg-card: #ffffff;
-  --text-main: #0f172a;
-  --text-muted: #64748b;
+  --glass: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --text-main: #1e293b;
+  --text-dim: #64748b;
   --border: #e2e8f0;
   --sidebar-w: 260px;
-  --shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+}
+
+[data-theme="dark"] {
+  --bg-app: #030712;
+  --bg-card: #0f172a;
+  --glass: rgba(15, 23, 42, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --text-main: #f1f5f9;
+  --text-dim: #94a3b8;
+  --border: #1e293b;
 }
 
 body.analytics-body {
   background: var(--bg-app);
   color: var(--text-main);
   display: flex;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Outfit', sans-serif;
   margin: 0;
+  min-height: 100vh;
 }
 
-/* Sidebar */
+/* Shareable components from dashboard.css logic */
+.dashboard-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.d-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.15;
+  animation: drift 25s infinite alternate ease-in-out;
+}
+[data-theme="dark"] .d-orb { opacity: 0.2; }
+.d-orb-1 { width: 600px; height: 600px; background: var(--primary); top: -200px; left: -200px; }
+.d-orb-2 { width: 400px; height: 400px; background: #a855f7; bottom: 0; right: 0; }
+
+@keyframes drift {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(100px, 100px) scale(1.1); }
+}
+
+/* Sidebar consistency */
 .sidebar {
   width: var(--sidebar-w);
   height: 100vh;
   position: fixed;
-  top: 0;
-  left: 0;
-  background: var(--bg-card);
-  border-right: 1px solid var(--border);
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid var(--glass-border);
   display: flex;
   flex-direction: column;
-  padding: 1.5rem;
+  padding: 2rem 1.25rem;
   z-index: 1000;
-  transition: transform 0.3s ease-in-out;
+  transition: transform 0.3s ease;
 }
 
-/* Main content */
+.brand-logo { font-weight: 800; margin-bottom: 2.5rem; font-size: 1.5rem; color: var(--text-main); }
+.brand-logo span { color: var(--primary); }
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  padding: 0.85rem 1.25rem;
+  color: var(--text-dim) !important;
+  text-decoration: none;
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+  transition: 0.3s;
+}
+.nav-link:hover { color: var(--text-main) !important; background: rgba(255,255,255,0.05); }
+.nav-link.active {
+  background: var(--primary) !important;
+  color: white !important;
+  box-shadow: 0 10px 20px -5px var(--primary-glow);
+}
+
 .main-content {
   margin-left: var(--sidebar-w);
   flex-grow: 1;
-  padding: 2.5rem;
+  padding: 3rem;
   width: calc(100% - var(--sidebar-w));
-  animation: fadeIn 0.8s ease-out;
-}
-
-/* Analytics Grid */
-.analytics-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-  gap: 1.5rem;
-  margin-top: 2rem;
 }
 
 .chart-card {
-  background: var(--bg-card);
-  padding: 1.5rem;
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  transition: transform 0.3s ease;
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+  padding: 2rem;
+  border-radius: 24px;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+  transition: 0.3s;
 }
 .chart-card:hover { transform: translateY(-5px); }
 .chart-card h2 {
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--text-muted);
-  margin-bottom: 1.5rem;
+  color: var(--text-dim);
+  margin-bottom: 2rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
 }
 
-/* Pie chart wrapper */
-.pie-wrapper {
-  max-width: 350px;
-  margin: 0 auto;
-}
-
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Tablet view (≤992px) */
+/* Mobile sidebar */
 @media (max-width: 992px) {
-  .sidebar {
-    width: 80px;
-    padding: 1rem;
-  }
-  .sidebar span, .sidebar p, .brand-logo span, .u-name {
-    display: none;
-  }
-  .main-content {
-    margin-left: 80px;
-    width: calc(100% - 80px);
-    padding: 2rem;
-  }
-  .analytics-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Mobile view (≤600px) */
-@media (max-width: 600px) {
-  .sidebar {
-    transform: translateX(-100%);
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: var(--sidebar-w);
-  }
-  .sidebar.active {
-    transform: translateX(0);
-  }
-
-  /* Toggle button for mobile */
-  .sidebar-toggle {
-    display: block;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background: #000; /* black bar */
-    color: #fff;
-    border: none;
-    padding: 12px;
-    font-size: 1.2rem;
-    text-align: left;
-    cursor: pointer;
-    z-index: 1100;
-  }
-
-  .main-content {
-    margin-left: 0;
-    width: 100%;
-    padding: 80px 15px 20px; /* push content below toggle bar */
-  }
-
-  .chart-card {
-    padding: 1rem;
-  }
-  .chart-card h2 {
-    font-size: 1rem;
-    margin-bottom: 1rem;
-  }
-  .pie-wrapper {
-    max-width: 280px;
-  }
+  .sidebar { transform: translateX(-100%); width: 280px; }
+  .sidebar.active { transform: translateX(0); }
+  .main-content { margin-left: 0; width: 100%; padding: 2rem; }
 }
