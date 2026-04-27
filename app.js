@@ -1,6 +1,7 @@
 require('dotenv').config(); // ✅ .env support
 
 const express = require('express');
+const path = require('path');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const moment = require('moment');
@@ -17,23 +18,23 @@ const { OAuth2Client } = require('google-auth-library');
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const app = express();
+app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json()); // ← Added: needed for /subscribe JSON payload
-app.use(express.static('public'));
+app.use(bodyParser.json()); 
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Keep-alive ping to prevent Render free tier sleep
-app.get('/ping', (req, res) => {
-  res.send('pong');
-});
-
-// Self-ping every 10 minutes to stay awake longer
-setInterval(() => {
-  const host = process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || 3000}`;
-  fetch(`${host}/ping`)
-    .then(() => console.log('Self-ping success - app staying awake'))
-    .catch(err => console.log('Self-ping failed:', err.message));
-}, 10 * 60 * 1000); // 10 minutes
+// Keep-alive logic only for non-Vercel environments (like Render)
+if (!process.env.VERCEL) {
+  app.get('/ping', (req, res) => res.send('pong'));
+  
+  setInterval(() => {
+    const host = process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || 3000}`;
+    fetch(`${host}/ping`)
+      .then(() => console.log('Self-ping success'))
+      .catch(err => console.log('Self-ping failed:', err.message));
+  }, 10 * 60 * 1000);
+}
 
 
 // Connect to MongoDB
@@ -436,7 +437,6 @@ app.post('/auth/google', async (req, res) => {
 
 // Web Push Notifications
 const webpush = require('web-push');
-const cron = require('node-cron');
 
 webpush.setVapidDetails(
   'mailto:your-email@example.com',
@@ -479,21 +479,20 @@ async function sendNotification(title, body) {
   }
 }
 
-// Morning reminder at 7:00 AM IST
-cron.schedule('0 7 * * *', () => {
-  console.log('[CRON] Running morning reminder at 7 AM IST');
-  sendNotification("ZenTrack Reminder 🌞", "Good morning! Don’t forget to mark your goals today.");
-}, {
-  timezone: "Asia/Kolkata"
-});
+if (!process.env.VERCEL) {
+  const cron = require('node-cron');
+  // Morning reminder at 7:00 AM IST
+  cron.schedule('0 7 * * *', () => {
+    console.log('[CRON] Running morning reminder');
+    sendNotification("ZenTrack Reminder 🌞", "Good morning! Don’t forget to mark your goals today.");
+  }, { timezone: "Asia/Kolkata" });
 
-// Night reminder at 10:00 PM IST
-cron.schedule('0 22 * * *', () => {
-  console.log('[CRON] Running night reminder at 10 PM IST');
-  sendNotification("ZenTrack Reminder 🌙", "Day’s ending — check your progress before bed.");
-}, {
-  timezone: "Asia/Kolkata"
-});
+  // Night reminder at 10:00 PM IST
+  cron.schedule('0 22 * * *', () => {
+    console.log('[CRON] Running night reminder');
+    sendNotification("ZenTrack Reminder 🌙", "Day’s ending — check your progress before bed.");
+  }, { timezone: "Asia/Kolkata" });
+}
 
 // ─── Subscribe endpoint ────────────────────────────────────────────────────────
 app.post('/subscribe', isAuthenticated, async (req, res) => {
