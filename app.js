@@ -47,9 +47,16 @@ if (!process.env.VERCEL) {
 
 
 // Connect to MongoDB
+console.log('⏳ Attempting to connect to MongoDB...');
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('DB Connected'))
-  .catch(err => console.log(err));
+  .then(() => console.log('✅ DATABASE CONNECTED SUCCESSFULLY'))
+  .catch(err => {
+    console.error('❌ MONGODB CONNECTION ERROR:');
+    console.error(err.message);
+    if (err.message.includes('IP not whitelisted')) {
+       console.error("TIP: You need to allow '0.0.0.0/0' (all IPs) in your MongoDB Atlas Network Access settings!");
+    }
+  });
 
 // Session config
 app.use(session({
