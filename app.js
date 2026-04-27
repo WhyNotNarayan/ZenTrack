@@ -538,9 +538,3 @@ if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
 }
 
 module.exports = app;
-
-// Example route (kept as you had it)
-app.get('/tracker', (req, res) => {
-  res.render('tracker', { showGuide: true });  // or false
-});
-
