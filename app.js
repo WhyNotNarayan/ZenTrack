@@ -519,11 +519,15 @@ app.post('/subscribe', isAuthenticated, async (req, res) => {
 });
 
 // Server listen
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`ZenTrack running on port ${port}`);
-  console.log(`Current server time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`);
-});
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  const port = process.env.PORT || 3000;
+  app.listen(port, () => {
+    console.log(`ZenTrack running on port ${port}`);
+    console.log(`Current server time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`);
+  });
+}
+
+module.exports = app;
 
 // Example route (kept as you had it)
 app.get('/tracker', (req, res) => {
