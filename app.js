@@ -14,8 +14,17 @@ const Goal = require('./models/Goal');
 const DailyTrack = require('./models/DailyTrack');
 const User = require('./models/User');
 const PushSubscription = require('./models/PushSubscription');
-const { OAuth2Client } = require('google-auth-library');
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const requiredEnvs = ['MONGO_URI', 'SESSION_SECRET', 'GOOGLE_CLIENT_ID'];
+requiredEnvs.forEach(v => {
+  if (!process.env[v]) {
+    console.error(`❌ CRITICAL ERROR: Environment variable ${v} is missing!`);
+    if (process.env.VERCEL) {
+       console.error("Please add this key in Vercel Project Settings > Environment Variables");
+    }
+  }
+});
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || 'dummy-id');
 
 const app = express();
 app.set('views', path.join(__dirname, 'views'));
@@ -44,10 +53,12 @@ mongoose.connect(process.env.MONGO_URI)
 
 // Session config
 app.use(session({
-  secret: process.env.SESSION_SECRET,
+  secret: process.env.SESSION_SECRET || 'fallback-secret',
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({ mongoUrl: process.env.MONGO_URI })
+  store: MongoStore.create({ 
+    mongoUrl: process.env.MONGO_URI || 'mongodb://localhost:27017/zentrack' 
+  })
 }));
 
 // Passport config
