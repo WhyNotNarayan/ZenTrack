@@ -1,14 +1,10 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "app.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["views/**", "public/**"]
-      }
+  "functions": {
+    "app.js": {
+      "includeFiles": "views/**,public/**"
     }
-  ],
+  },
   "rewrites": [
     {
       "source": "/(.*)",
