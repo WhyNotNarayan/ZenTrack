@@ -10,6 +10,15 @@ const { OAuth2Client } = require('google-auth-library');
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcryptjs');
 const session = require('express-session');
+
+// Prevent crashes on Vercel
+process.on('uncaughtException', (err) => {
+  console.error('🔥 UNCAUGHT EXCEPTION:', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🔥 UNHANDLED REJECTION:', reason);
+});
+
 const MongoStore = require('connect-mongo');
 const Goal = require('./models/Goal');
 const DailyTrack = require('./models/DailyTrack');
