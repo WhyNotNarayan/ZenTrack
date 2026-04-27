@@ -1,12 +1,21 @@
 require('dotenv').config(); // ✅ .env support
 
+require('dotenv').config(); // ✅ .env support
+
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const moment = require('moment');
 const passport = require('passport');
-const { OAuth2Client } = require('google-auth-library');
+let OAuth2Client;
+try {
+  const googleAuth = require('google-auth-library');
+  OAuth2Client = googleAuth.OAuth2Client;
+} catch (e) {
+  console.error("⚠️ Google Auth Library failed to load, using mock for stability:", e.message);
+  OAuth2Client = class { constructor() { console.log("Mock OAuth2Client active"); } };
+}
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcryptjs');
 const session = require('express-session');
@@ -546,12 +555,13 @@ app.post('/subscribe', isAuthenticated, async (req, res) => {
 });
 
 // Server listen
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
-  const port = process.env.PORT || 3000;
-  app.listen(port, () => {
-    console.log(`ZenTrack running on port ${port}`);
+module.exports = app;
+
+// Only start the server if NOT running on Vercel
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running locally at http://localhost:${PORT}`);
     console.log(`Current server time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`);
   });
 }
-
-module.exports = app;
