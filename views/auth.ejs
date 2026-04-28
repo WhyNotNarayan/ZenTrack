@@ -196,8 +196,8 @@
                 const centerX = rect.left + rect.width / 2;
                 const centerY = rect.top + rect.height / 2;
                 const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
-                const moveX = Math.cos(angle) * 8;
-                const moveY = Math.sin(angle) * 8;
+                const moveX = Math.cos(angle) * 10;
+                const moveY = Math.sin(angle) * 10;
                 pupil.style.transform = `translate(${moveX}px, ${moveY}px)`;
               } catch(ex) {}
             });
