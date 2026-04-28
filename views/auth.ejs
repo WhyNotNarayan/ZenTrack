@@ -107,9 +107,9 @@
               </div>
               <div class="input-group">
                 <input type="tel" name="mobile" id="mobileInput" placeholder="10-digit Mobile Number"
-                  pattern="[0-9]{10}" required title="10-digit mobile number">
+                  pattern="[0-9]{10}" minlength="10" maxlength="10" required title="Please enter exactly 10 digits">
               </div>
-              <button type="submit" class="btn-submit">Level Up</button>
+              <button type="submit" class="btn-submit" id="levelUpBtn" disabled>Level Up</button>
             </form>
 
             <div class="divider"><span>OR</span></div>
@@ -214,28 +214,27 @@
           });
         });
 
-        // Mobile Number Validation
+        // Mobile Number Validation — strict 10-digit only
         const mobileInput = document.getElementById('mobileInput');
-        const signupForm = document.getElementById('signupForm');
-        const signupBtn = signupForm ? signupForm.querySelector('.btn-submit') : null;
+        const levelUpBtn = document.getElementById('levelUpBtn');
 
-        if (mobileInput && signupBtn) {
+        if (mobileInput && levelUpBtn) {
           const validateMobile = () => {
-            const val = mobileInput.value.replace(/\D/g, '');
-            mobileInput.value = val.slice(0, 10);
+            // Strip non-digits and cap at 10
+            mobileInput.value = mobileInput.value.replace(/\D/g, '').slice(0, 10);
             if (mobileInput.value.length === 10) {
-              signupBtn.disabled = false;
-              signupBtn.style.opacity = '1';
-              signupBtn.style.cursor = 'pointer';
+              levelUpBtn.disabled = false;
+              levelUpBtn.style.opacity = '1';
+              levelUpBtn.style.cursor = 'pointer';
             } else {
-              signupBtn.disabled = true;
-              signupBtn.style.opacity = '0.5';
-              signupBtn.style.cursor = 'not-allowed';
+              levelUpBtn.disabled = true;
+              levelUpBtn.style.opacity = '0.5';
+              levelUpBtn.style.cursor = 'not-allowed';
             }
           };
           mobileInput.addEventListener('input', validateMobile);
-          // Run once on load to set initial state
-          validateMobile();
+          mobileInput.addEventListener('keyup', validateMobile);
+          mobileInput.addEventListener('paste', () => setTimeout(validateMobile, 10));
         }
 
         // Error Alert Auto-hide

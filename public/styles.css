@@ -200,6 +200,14 @@ body {
   box-shadow: 0 10px 20px -5px var(--primary-glow);
 }
 
+.btn-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  background: #4b5563;
+}
+
 /* --- Divider --- */
 .divider {
   display: flex;
