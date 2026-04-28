@@ -261,3 +261,93 @@ body.dashboard-body {
 /* History Specific Display Cells */
 .cell-check-display { font-size: 1.2rem; }
 .cell-check-display .fas { color: var(--accent); filter: drop-shadow(0 0 5px var(--accent)); }
+
+/* =============================================
+   ONBOARDING GUIDE OVERLAY
+   ============================================= */
+.onboarding-guide {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+}
+
+.guide-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+}
+
+.guide-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 40px 36px;
+  max-width: 460px;
+  width: 90%;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+  text-align: center;
+  animation: guidePopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 10000;
+}
+
+[data-theme="dark"] .guide-content {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
+@keyframes guidePopIn {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.guide-step h2 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin-bottom: 12px;
+  color: #6366f1;
+}
+
+.guide-step p {
+  font-size: 1rem;
+  color: #64748b;
+  line-height: 1.6;
+  margin-bottom: 28px;
+}
+
+[data-theme="dark"] .guide-step p {
+  color: #94a3b8;
+}
+
+.guide-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-next, .btn-prev, .btn-skip, .btn-finish {
+  padding: 10px 22px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-next  { background: #6366f1; color: white; }
+.btn-next:hover  { background: #4f46e5; transform: translateY(-2px); }
+
+.btn-finish { background: #10b981; color: white; }
+.btn-finish:hover { background: #059669; transform: translateY(-2px); }
+
+.btn-prev  { background: #e2e8f0; color: #475569; }
+.btn-prev:hover  { background: #cbd5e1; }
+
+.btn-skip  { background: transparent; color: #94a3b8; border: 1px solid #e2e8f0; }
+.btn-skip:hover  { color: #64748b; background: #f8fafc; }

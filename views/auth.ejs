@@ -175,62 +175,61 @@
         };
 
         // --- UI Interactions ---
-        const flipCard = document.getElementById('flipCard');
-
-        document.querySelector('.flip-to-signup').addEventListener('click', (e) => {
-          e.preventDefault();
-          flipCard.classList.add('flipped');
-        });
-
-        document.querySelector('.flip-to-login').addEventListener('click', (e) => {
-          e.preventDefault();
-          flipCard.classList.remove('flipped');
-        });
-
-        // Eye Movement
-        document.addEventListener('mousemove', (e) => {
-          document.querySelectorAll('.pupil').forEach(pupil => {
-            const rect = pupil.parentElement.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-
-            const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
-            const distance = 8;
-
-            const moveX = Math.cos(angle) * distance;
-            const moveY = Math.sin(angle) * distance;
-
-            pupil.style.transform = `translate(${moveX}px, ${moveY}px)`;
+        try {
+          const flipCard = document.getElementById('flipCard');
+          document.querySelector('.flip-to-signup')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            flipCard?.classList.add('flipped');
           });
-        });
-
-        // Eye Close on Password
-        document.querySelectorAll('.password-field').forEach(field => {
-          field.addEventListener('focus', () => {
-            document.querySelectorAll('.eye').forEach(eye => eye.classList.add('closed'));
+          document.querySelector('.flip-to-login')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            flipCard?.classList.remove('flipped');
           });
-          field.addEventListener('blur', () => {
-            document.querySelectorAll('.eye').forEach(eye => eye.classList.remove('closed'));
+        } catch(e) { console.warn('Flip card error:', e); }
+
+        // Eye Movement - isolated
+        try {
+          document.addEventListener('mousemove', (e) => {
+            document.querySelectorAll('.pupil').forEach(pupil => {
+              try {
+                const rect = pupil.parentElement.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+                const moveX = Math.cos(angle) * 8;
+                const moveY = Math.sin(angle) * 8;
+                pupil.style.transform = `translate(${moveX}px, ${moveY}px)`;
+              } catch(ex) {}
+            });
           });
-        });
+        } catch(e) { console.warn('Eye movement error:', e); }
 
-        // Mobile validation moved to isolated script block below
-
+        // Eye Close on Password - isolated
+        try {
+          document.querySelectorAll('.password-field').forEach(field => {
+            field.addEventListener('focus', () => {
+              document.querySelectorAll('.eye').forEach(eye => eye.classList.add('closed'));
+            });
+            field.addEventListener('blur', () => {
+              document.querySelectorAll('.eye').forEach(eye => eye.classList.remove('closed'));
+            });
+          });
+        } catch(e) { console.warn('Eye close error:', e); }
 
         // Error Alert Auto-hide
-        const errorAlert = document.getElementById('authError');
-        if (errorAlert) {
-          setTimeout(() => {
-            errorAlert.style.display = 'none';
-          }, 5000);
-        }
+        try {
+          const errorAlert = document.getElementById('authError');
+          if (errorAlert) setTimeout(() => { errorAlert.style.display = 'none'; }, 5000);
+        } catch(e) {}
 
         function showError(msg) {
-          const alert = document.createElement('div');
-          alert.className = 'alert';
-          alert.textContent = msg;
-          document.body.appendChild(alert);
-          setTimeout(() => alert.remove(), 5000);
+          try {
+            const el = document.createElement('div');
+            el.className = 'alert';
+            el.textContent = msg;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 5000);
+          } catch(e) {}
         }
       </script>
 
