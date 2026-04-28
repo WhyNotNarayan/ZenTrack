@@ -288,36 +288,45 @@
       });
     });
 
-    // Onboarding Guide
-    <% if (showGuide) { %>
-      // DOM already loaded at this point (script is at bottom of body)
-      // Show guide immediately
-      (function() {
+  </script>
+
+  <!-- ISOLATED: Onboarding Guide - totally independent from Chart.js and other scripts -->
+  <script>
+    (function() {
+      // Define all guide functions on window so onclick="" can find them
+      window.showStep = function(step) {
+        var steps = document.querySelectorAll('.guide-step');
+        for (var i = 0; i < steps.length; i++) {
+          steps[i].style.display = 'none';
+        }
+        var target = document.getElementById('step-' + step);
+        if (target) {
+          target.style.display = 'block';
+        }
+      };
+
+      window.nextStep = function(step) { window.showStep(step); };
+      window.prevStep = function(step) { window.showStep(step); };
+
+      window.skipGuide = function() { window.finishGuide(true); };
+
+      window.finishGuide = function(silent) {
+        var guide = document.getElementById('onboarding-guide');
+        if (guide) guide.style.display = 'none';
+        fetch('/guide-done', { method: 'POST' }).catch(function() {});
+        if (!silent) alert("You're all set! Start building your habits today! 💪");
+      };
+
+      // Show the guide if the server flagged this as a first-time user
+      <% if (showGuide) { %>
         var guide = document.getElementById('onboarding-guide');
         if (guide) {
           guide.style.display = 'block';
-          showStep(1);
+          window.showStep(1);
         }
-      })();
-    <% } %>
-
-    window.currentGuideStep = 1;
-    window.showStep = function(step) {
-      window.currentGuideStep = step;
-      document.querySelectorAll('.guide-step').forEach(el => el.style.display = 'none');
-      const nextEl = document.getElementById(`step-${step}`);
-      if (nextEl) nextEl.style.display = 'block';
-      else console.warn(`Step ${step} not found`);
-    };
-    window.nextStep = function(step) { window.showStep(step); };
-    window.prevStep = function(step) { window.showStep(step); };
-    function skipGuide() { finishGuide(true); }
-    function finishGuide(silent = false) {
-      document.getElementById('onboarding-guide').style.display = 'none';
-      // Tell server user has seen the guide
-      fetch('/guide-done', { method: 'POST' }).catch(() => {});
-      if (!silent) alert("You're all set! Start building your habits today! 💪");
-    }
+      <% } %>
+    })();
   </script>
+
 </body>
 </html>
