@@ -269,12 +269,17 @@
       });
     });
 
-    // Onboarding logic
+    // Onboarding Guide
     <% if (showGuide) { %>
-      document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('onboarding-guide').style.display = 'block';
-        showStep(1);
-      });
+      // DOM already loaded at this point (script is at bottom of body)
+      // Show guide immediately
+      (function() {
+        var guide = document.getElementById('onboarding-guide');
+        if (guide) {
+          guide.style.display = 'block';
+          showStep(1);
+        }
+      })();
     <% } %>
 
     let currentGuideStep = 1;
@@ -288,7 +293,9 @@
     function skipGuide() { finishGuide(true); }
     function finishGuide(silent = false) {
       document.getElementById('onboarding-guide').style.display = 'none';
-      if (!silent) alert("Process completed smoothly! Start building your habits today! 💪");
+      // Tell server user has seen the guide
+      fetch('/guide-done', { method: 'POST' }).catch(() => {});
+      if (!silent) alert("You're all set! Start building your habits today! 💪");
     }
   </script>
 </body>

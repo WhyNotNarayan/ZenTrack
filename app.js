@@ -188,10 +188,6 @@ app.get('/', isAuthenticated, async (req, res) => {
   }];
 
   const showGuide = req.user.isFirstLogin !== false;
-  if (showGuide) {
-    req.user.isFirstLogin = false;
-    await req.user.save();
-  }
 
   res.render('tracker', {
     goals, tracks, date: today, moment, isPast,
@@ -199,6 +195,14 @@ app.get('/', isAuthenticated, async (req, res) => {
     currentMonth: currentMonth.format('MMMM YYYY'),
     dates, progress: JSON.stringify(progress), data, showGuide
   });
+});
+
+// Mark guide as done when user dismisses it
+app.post('/guide-done', isAuthenticated, async (req, res) => {
+  try {
+    await req.user.updateOne({ isFirstLogin: false });
+  } catch (e) { console.error(e); }
+  res.json({ ok: true });
 });
 
 // Goals page
