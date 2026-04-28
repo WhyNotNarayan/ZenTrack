@@ -25,18 +25,6 @@ process.on('unhandledRejection', (reason) => {
   console.error('UNHANDLED REJECTION:', reason);
 });
 
-// Resilient Google Auth loading
-let OAuth2Client;
-try {
-  OAuth2Client = require('google-auth-library').OAuth2Client;
-  console.log('Google Auth library loaded OK');
-} catch (e) {
-  console.error('Google Auth library failed to load:', e.message);
-  OAuth2Client = class {
-    constructor() {}
-    async verifyIdToken() { throw new Error('Google Auth not available'); }
-  };
-}
 
 const app = express();
 app.set('views', path.join(__dirname, 'views'));
@@ -95,8 +83,7 @@ function isAuthenticated(req, res, next) {
 // Auth page
 app.get('/auth', (req, res) => {
   res.render('auth', {
-    error: req.session.messages ? req.session.messages[0] : null,
-    googleClientId: process.env.GOOGLE_CLIENT_ID
+    error: req.session.messages ? req.session.messages[0] : null
   });
 });
 

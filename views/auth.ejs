@@ -4,24 +4,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="/styles.css?v=3">
+  <link rel="stylesheet" href="/styles.css?v=4">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <title>ZenTrack | Join the Community</title>
-  <script src="https://accounts.google.com/gsi/client" onload="onGoogleLibraryLoad()" async defer></script>
   <script>
     // Auto-flip to signup if ?signup param is present
-    window.addEventListener('DOMContentLoaded', () => {
-      const params = new URLSearchParams(window.location.search);
+    window.addEventListener('DOMContentLoaded', function() {
+      var params = new URLSearchParams(window.location.search);
       if (params.get('signup') === '1') {
         document.getElementById('flipCard').classList.add('flipped');
       }
-      // Show success message if redirected after signup
       if (params.get('success')) {
-        const msg = document.createElement('div');
+        var msg = document.createElement('div');
         msg.className = 'alert alert-success';
         msg.textContent = decodeURIComponent(params.get('success'));
         document.body.appendChild(msg);
-        setTimeout(() => msg.remove(), 5000);
+        setTimeout(function() { msg.remove(); }, 5000);
+      }
+      if (params.get('error')) {
+        var errMsg = document.createElement('div');
+        errMsg.className = 'alert';
+        errMsg.textContent = decodeURIComponent(params.get('error'));
+        document.body.appendChild(errMsg);
+        setTimeout(function() { errMsg.remove(); }, 5000);
       }
     });
   </script>
@@ -36,235 +41,156 @@
   <div class="blob blob-3"></div>
 
   <% if (error) { %>
-    <div class="alert" id="authError">
-      <%= error %>
-    </div>
-    <% } %>
+    <div class="alert" id="authError"><%= error %></div>
+  <% } %>
 
-      <div class="auth-container">
-        <div class="flip-card" id="flipCard">
+  <div class="auth-container">
+    <div class="flip-card" id="flipCard">
 
-          <!-- LOGIN SIDE -->
-          <div class="card-face card-front">
-            <div class="brand">
-              <h1>Zen<span>Track</span></h1>
-              <p>Welcome back! Let's stay consistent.</p>
-            </div>
+      <!-- ===== LOGIN SIDE ===== -->
+      <div class="card-face card-front">
+        <div class="brand">
+          <h1>Zen<span>Track</span></h1>
+          <p>Welcome back! Let's stay consistent.</p>
+        </div>
 
-            <div class="mascot">
-              <div class="eye">
-                <div class="pupil"></div>
-              </div>
-              <div class="eye">
-                <div class="pupil"></div>
-              </div>
-            </div>
+        <div class="mascot">
+          <div class="eye"><div class="pupil"></div></div>
+          <div class="eye"><div class="pupil"></div></div>
+        </div>
 
-            <form action="/login" method="POST" class="auth-form">
-              <div class="input-group">
-                <input type="email" name="email" placeholder="Email Address" required>
-              </div>
-              <div class="input-group">
-                <input type="password" name="password" class="password-field" placeholder="Password" required>
-              </div>
-              <button type="submit" class="btn-submit">Sign In</button>
-            </form>
-
-            <div class="divider"><span>OR</span></div>
-
-            <div id="google-login-btn"></div>
-
-            <div class="footer">
-              New here? <a href="/auth?signup=1" class="flip-to-signup">Create an account</a>
-            </div>
+        <form action="/login" method="POST" class="auth-form">
+          <div class="input-group">
+            <input type="email" name="email" placeholder="Email Address" required autocomplete="email">
           </div>
-
-          <!-- SIGNUP SIDE -->
-          <div class="card-face card-back">
-            <div class="brand">
-              <h1>Zen<span>Track</span></h1>
-              <p>Join us and start your journey.</p>
-            </div>
-
-            <div class="mascot">
-              <div class="eye">
-                <div class="pupil"></div>
-              </div>
-              <div class="eye">
-                <div class="pupil"></div>
-              </div>
-            </div>
-
-            <form action="/signup" method="POST" class="auth-form" id="signupForm">
-              <div class="input-group">
-                <input type="email" name="email" placeholder="Email Address" required>
-              </div>
-              <div class="input-group">
-                <input type="text" name="username" placeholder="Username" required>
-              </div>
-              <div class="input-group">
-                <input type="password" name="password" class="password-field" placeholder="Password" required>
-              </div>
-              <div class="input-group">
-                <input type="tel" name="mobile" id="mobileInput" placeholder="10-digit Mobile Number"
-                  pattern="[0-9]{10}" minlength="10" maxlength="10" required title="Please enter exactly 10 digits">
-              </div>
-              <button type="submit" class="btn-submit" id="levelUpBtn">Level Up</button>
-            </form>
-
-            <div class="divider"><span>OR</span></div>
-
-            <div id="google-signup-btn"></div>
-
-            <div class="footer">
-              Already a member? <a href="/auth" class="flip-to-login">Login</a>
-            </div>
+          <div class="input-group">
+            <input type="password" name="password" class="password-field" placeholder="Password" required autocomplete="current-password">
           </div>
+          <button type="submit" class="btn-submit">Sign In <i class="fas fa-arrow-right"></i></button>
+        </form>
 
+        <div class="footer">
+          New here? <a href="/auth?signup=1" class="flip-to-signup">Create an account →</a>
         </div>
       </div>
 
-      <script>
-        const GOOGLE_CLIENT_ID = "<%= googleClientId %>";
+      <!-- ===== SIGNUP SIDE ===== -->
+      <div class="card-face card-back">
+        <div class="brand">
+          <h1>Zen<span>Track</span></h1>
+          <p>Join us and start your journey.</p>
+        </div>
 
-        function handleCredentialResponse(response) {
-          fetch('/auth/google', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken: response.credential })
-          })
-            .then(res => res.json())
-            .then(data => {
-              if (data.success) {
-                window.location.href = data.redirectUrl || '/';
-              } else {
-                showError(data.error || 'Google Login Failed');
-              }
-            })
-            .catch(err => showError('Network Error: ' + err.message));
-        }
+        <div class="mascot">
+          <div class="eye"><div class="pupil"></div></div>
+          <div class="eye"><div class="pupil"></div></div>
+        </div>
 
-        window.onGoogleLibraryLoad = function () {
-          if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID !== "undefined" && GOOGLE_CLIENT_ID !== "") {
-            google.accounts.id.initialize({
-              client_id: GOOGLE_CLIENT_ID,
-              callback: handleCredentialResponse
-            });
+        <form action="/signup" method="POST" class="auth-form" id="signupForm">
+          <div class="input-group">
+            <input type="email" name="email" placeholder="Email Address" required autocomplete="email">
+          </div>
+          <div class="input-group">
+            <input type="text" name="username" placeholder="Username" required autocomplete="username">
+          </div>
+          <div class="input-group">
+            <input type="password" name="password" class="password-field" placeholder="Password" required autocomplete="new-password">
+          </div>
+          <div class="input-group">
+            <input type="tel" name="mobile" id="mobileInput" placeholder="10-digit Mobile Number"
+              pattern="[0-9]{10}" minlength="10" maxlength="10" required>
+          </div>
+          <button type="submit" class="btn-submit" id="levelUpBtn">Level Up <i class="fas fa-rocket"></i></button>
+        </form>
 
-            const renderOptions = {
-              theme: "outline",
-              size: "large",
-              width: 320,
-              text: "continue_with",
-              shape: "pill"
-            };
+        <div class="footer">
+          Already a member? <a href="/auth" class="flip-to-login">← Login</a>
+        </div>
+      </div>
 
-            google.accounts.id.renderButton(
-              document.getElementById("google-login-btn"),
-              renderOptions
-            );
-            google.accounts.id.renderButton(
-              document.getElementById("google-signup-btn"),
-              renderOptions
-            );
-          } else {
-            // Hide dividers if no Google Client ID
-            document.querySelectorAll('.divider').forEach(d => d.style.display = 'none');
-            console.warn("GOOGLE_CLIENT_ID is missing — Google buttons hidden");
+    </div>
+  </div>
+
+  <!-- Main UI script -->
+  <script>
+    (function() {
+      try {
+        var flipCard = document.getElementById('flipCard');
+        var toSignup = document.querySelector('.flip-to-signup');
+        var toLogin  = document.querySelector('.flip-to-login');
+        if (toSignup) toSignup.addEventListener('click', function(e) {
+          e.preventDefault();
+          if (flipCard) flipCard.classList.add('flipped');
+        });
+        if (toLogin) toLogin.addEventListener('click', function(e) {
+          e.preventDefault();
+          if (flipCard) flipCard.classList.remove('flipped');
+        });
+      } catch(e) {}
+
+      // Error alert auto-hide
+      try {
+        var err = document.getElementById('authError');
+        if (err) setTimeout(function() { err.style.display = 'none'; }, 5000);
+      } catch(e) {}
+    })();
+  </script>
+
+  <!-- ISOLATED: Eye Animation -->
+  <script>
+    (function() {
+      try {
+        document.addEventListener('mousemove', function(e) {
+          var pupils = document.querySelectorAll('.pupil');
+          for (var i = 0; i < pupils.length; i++) {
+            try {
+              var p = pupils[i];
+              var rect = p.parentElement.getBoundingClientRect();
+              var cx = rect.left + rect.width / 2;
+              var cy = rect.top + rect.height / 2;
+              var angle = Math.atan2(e.clientY - cy, e.clientX - cx);
+              p.style.transform = 'translate(' + (Math.cos(angle) * 10) + 'px, ' + (Math.sin(angle) * 10) + 'px)';
+            } catch(err) {}
           }
-        };
+        });
 
-        // --- UI Interactions ---
-        try {
-          const flipCard = document.getElementById('flipCard');
-          document.querySelector('.flip-to-signup')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            flipCard?.classList.add('flipped');
+        // Close eyes when password field focused
+        document.querySelectorAll('.password-field').forEach(function(f) {
+          f.addEventListener('focus', function() {
+            document.querySelectorAll('.eye').forEach(function(eye) { eye.classList.add('closed'); });
           });
-          document.querySelector('.flip-to-login')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            flipCard?.classList.remove('flipped');
+          f.addEventListener('blur', function() {
+            document.querySelectorAll('.eye').forEach(function(eye) { eye.classList.remove('closed'); });
           });
-        } catch(e) { console.warn('Flip card error:', e); }
+        });
+      } catch(e) { console.error('Eye error:', e); }
+    })();
+  </script>
 
-        // Error Alert Auto-hide
-        try {
-          const errorAlert = document.getElementById('authError');
-          if (errorAlert) setTimeout(() => { errorAlert.style.display = 'none'; }, 5000);
-        } catch(e) {}
-
-        function showError(msg) {
-          try {
-            const el = document.createElement('div');
-            el.className = 'alert';
-            el.textContent = msg;
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 5000);
-          } catch(e) {}
+  <!-- ISOLATED: Mobile Validation -->
+  <script>
+    (function() {
+      try {
+        var mob = document.getElementById('mobileInput');
+        var btn = document.getElementById('levelUpBtn');
+        if (!mob || !btn) return;
+        btn.disabled = true;
+        function check() {
+          mob.value = mob.value.replace(/[^0-9]/g, '').substring(0, 10);
+          var ok = mob.value.length === 10;
+          btn.disabled = !ok;
+          btn.style.opacity = ok ? '1' : '0.5';
+          btn.style.cursor = ok ? 'pointer' : 'not-allowed';
         }
-      </script>
-
-      <!-- ISOLATED: Eye Animation - independent from all other JS -->
-      <script>
-        (function() {
-          try {
-            document.addEventListener('mousemove', (e) => {
-              var pupils = document.querySelectorAll('.pupil');
-              for(var i=0; i<pupils.length; i++) {
-                try {
-                  var p = pupils[i];
-                  var rect = p.parentElement.getBoundingClientRect();
-                  var cx = rect.left + rect.width / 2;
-                  var cy = rect.top + rect.height / 2;
-                  var angle = Math.atan2(e.clientY - cy, e.clientX - cx);
-                  var mx = Math.cos(angle) * 10;
-                  var my = Math.sin(angle) * 10;
-                  p.style.transform = 'translate(' + mx + 'px, ' + my + 'px)';
-                } catch(err) {}
-              }
-            });
-
-            // Eye Close logic
-            document.querySelectorAll('.password-field').forEach(function(f) {
-              f.addEventListener('focus', function() {
-                document.querySelectorAll('.eye').forEach(function(e) { e.classList.add('closed'); });
-              });
-              f.addEventListener('blur', function() {
-                document.querySelectorAll('.eye').forEach(function(e) { e.classList.remove('closed'); });
-              });
-            });
-          } catch(e) { console.error('Isolated Eye Error:', e); }
-        })();
-      </script>
-
-      <!-- ISOLATED: Mobile validation - independent from all other JS -->
-      <script>
-        (function () {
-          try {
-            var mob = document.getElementById('mobileInput');
-            var btn = document.getElementById('levelUpBtn');
-            if (!mob || !btn) return;
-
-            // Start locked
-            btn.disabled = true;
-
-            function check() {
-              mob.value = mob.value.replace(/[^0-9]/g, '').substring(0, 10);
-              var ok = mob.value.length === 10;
-              btn.disabled = !ok;
-              btn.style.opacity = ok ? '1' : '0.5';
-              btn.style.cursor = ok ? 'pointer' : 'not-allowed';
-            }
-
-            mob.addEventListener('input', check);
-            mob.addEventListener('keyup', check);
-            mob.addEventListener('paste', function () { setTimeout(check, 20); });
-          } catch (e) {
-            var b = document.getElementById('levelUpBtn');
-            if (b) b.disabled = false;
-          }
-        })();
-      </script>
+        mob.addEventListener('input', check);
+        mob.addEventListener('keyup', check);
+        mob.addEventListener('paste', function() { setTimeout(check, 20); });
+      } catch(e) {
+        var b = document.getElementById('levelUpBtn');
+        if (b) b.disabled = false;
+      }
+    })();
+  </script>
 
 </body>
 
