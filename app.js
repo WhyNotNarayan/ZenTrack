@@ -118,7 +118,7 @@ app.post('/signup', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new User({ email, username, password: hashedPassword, mobile: cleanedMobile });
     await newUser.save();
-    res.redirect('/auth?success=Account created successfully! Please login now.');
+    res.redirect('/auth?success=Account%20created%20successfully!%20Please%20login%20now.');
   } catch (err) {
     console.error('Signup error:', err);
     res.redirect('/auth?error=Something went wrong. Please try again.');

@@ -8,6 +8,23 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <title>ZenTrack | Join the Community</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script>
+    // Auto-flip to signup if ?signup param is present
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('signup') === '1') {
+        document.getElementById('flipCard').classList.add('flipped');
+      }
+      // Show success message if redirected after signup
+      if (params.get('success')) {
+        const msg = document.createElement('div');
+        msg.className = 'alert alert-success';
+        msg.textContent = decodeURIComponent(params.get('success'));
+        document.body.appendChild(msg);
+        setTimeout(() => msg.remove(), 5000);
+      }
+    });
+  </script>
 </head>
 
 <body>
@@ -128,8 +145,8 @@
             .catch(err => showError('Network Error: ' + err.message));
         }
 
-        window.onload = function () {
-          if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID !== "undefined") {
+        window.onGoogleLibraryLoad = function () {
+          if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID !== "undefined" && GOOGLE_CLIENT_ID !== "") {
             google.accounts.id.initialize({
               client_id: GOOGLE_CLIENT_ID,
               callback: handleCredentialResponse
@@ -152,7 +169,9 @@
               renderOptions
             );
           } else {
-            console.warn("GOOGLE_CLIENT_ID is missing in .env");
+            // Hide dividers if no Google Client ID
+            document.querySelectorAll('.divider').forEach(d => d.style.display = 'none');
+            console.warn("GOOGLE_CLIENT_ID is missing — Google buttons hidden");
           }
         };
 
