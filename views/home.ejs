@@ -11,16 +11,16 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --primary: #6366f1;
-      --primary-dark: #4f46e5;
-      --accent: #10b981;
-      --bg: #030712;
-      --bg2: #0f172a;
-      --text: #f1f5f9;
+      --primary: #00C4A7;
+      --primary-dark: #009e88;
+      --accent: #F4CA64;
+      --bg: #071a18;
+      --bg2: #0a2420;
+      --text: #f0fdf9;
       --text-dim: #94a3b8;
       --glass: rgba(255,255,255,0.05);
       --glass-border: rgba(255,255,255,0.1);
-      --glow: rgba(99,102,241,0.35);
+      --glow: rgba(0,196,167,0.35);
     }
 
     html { scroll-behavior: smooth; }
@@ -40,9 +40,9 @@
     .orb {
       position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.2;
     }
-    .orb-1 { width: 600px; height: 600px; background: var(--primary); top: -200px; left: -150px; animation: float1 10s ease-in-out infinite; }
-    .orb-2 { width: 500px; height: 500px; background: var(--accent); bottom: -100px; right: -100px; animation: float2 13s ease-in-out infinite; }
-    .orb-3 { width: 400px; height: 400px; background: #8b5cf6; top: 40%; left: 50%; transform: translate(-50%,-50%); animation: float1 9s ease-in-out infinite reverse; }
+    .orb-1 { width: 600px; height: 600px; background: #00C4A7; top: -200px; left: -150px; animation: float1 10s ease-in-out infinite; }
+    .orb-2 { width: 500px; height: 500px; background: #F4CA64; bottom: -100px; right: -100px; animation: float2 13s ease-in-out infinite; }
+    .orb-3 { width: 400px; height: 400px; background: #38BDF8; top: 40%; left: 50%; transform: translate(-50%,-50%); animation: float1 9s ease-in-out infinite reverse; }
 
     @keyframes float1 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-40px)} }
     @keyframes float2 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(30px)} }
@@ -68,7 +68,8 @@
     .btn-login:hover { border-color: var(--primary); color: var(--primary); background: rgba(99,102,241,0.1); }
     .btn-signup {
       padding: 10px 24px; border-radius: 50px; border: none;
-      background: var(--primary); color: white; font-size: 0.95rem;
+      background: linear-gradient(135deg, var(--primary), #38BDF8);
+      color: white; font-size: 0.95rem;
       font-weight: 600; cursor: pointer; text-decoration: none;
       transition: all 0.3s; font-family: 'Outfit', sans-serif;
       box-shadow: 0 4px 20px var(--glow);
@@ -114,7 +115,7 @@
     }
     .cta-primary {
       padding: 16px 40px; border-radius: 50px; border: none;
-      background: linear-gradient(135deg, var(--primary), #8b5cf6);
+      background: linear-gradient(135deg, var(--primary), #38BDF8);
       color: white; font-size: 1.05rem; font-weight: 700;
       text-decoration: none; cursor: pointer; font-family: 'Outfit', sans-serif;
       box-shadow: 0 8px 30px var(--glow);
@@ -194,7 +195,7 @@
     }
     .step-num {
       width: 60px; height: 60px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--primary), #8b5cf6);
+      background: linear-gradient(135deg, var(--primary), #38BDF8);
       color: white; font-size: 1.4rem; font-weight: 800;
       display: flex; align-items: center; justify-content: center;
       margin: 0 auto 20px; box-shadow: 0 8px 20px var(--glow);

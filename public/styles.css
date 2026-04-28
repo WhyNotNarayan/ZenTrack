@@ -1,10 +1,10 @@
 :root {
-  --primary: #6366f1;
-  --primary-glow: rgba(99, 102, 241, 0.5);
-  --bg-dark: #0f172a;
+  --primary: #00C4A7;
+  --primary-glow: rgba(0, 196, 167, 0.5);
+  --bg-dark: #071a18;
   --glass-white: rgba(255, 255, 255, 0.08);
   --glass-border: rgba(255, 255, 255, 0.12);
-  --text-main: #f8fafc;
+  --text-main: #f0fdf9;
   --text-muted: #94a3b8;
 }
 
@@ -46,9 +46,9 @@ body {
   animation: drift 20s infinite alternate ease-in-out;
 }
 
-.blob-1 { top: -10%; left: -10%; background: #6366f1; }
-.blob-2 { bottom: -10%; right: -10%; background: #a855f7; animation-delay: -5s; }
-.blob-3 { top: 40%; left: 30%; background: #3b82f6; width: 300px; height: 300px; }
+.blob-1 { top: -10%; left: -10%; background: #00C4A7; }
+.blob-2 { bottom: -10%; right: -10%; background: #38BDF8; animation-delay: -5s; }
+.blob-3 { top: 40%; left: 30%; background: #F4CA64; width: 300px; height: 300px; }
 
 @keyframes drift {
   from { transform: translate(0,0) scale(1); }
@@ -181,7 +181,7 @@ body {
   outline: none;
   border-color: var(--primary);
   background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 0 4px rgba(0, 196, 167, 0.15);
 }
 
 .btn-submit {
@@ -198,7 +198,7 @@ body {
 }
 
 .btn-submit:hover {
-  background: #4f46e5;
+  background: #009e88;
   transform: translateY(-2px);
   box-shadow: 0 10px 20px -5px var(--primary-glow);
 }
