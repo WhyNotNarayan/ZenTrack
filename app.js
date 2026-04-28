@@ -113,7 +113,7 @@ app.post('/signup', async (req, res) => {
     }
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
-      return res.redirect('/auth?error=Email or username already exists');
+      return res.redirect('/auth?signup=1&error=Email or username already exists');
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new User({ email, username, password: hashedPassword, mobile: cleanedMobile });
@@ -121,7 +121,7 @@ app.post('/signup', async (req, res) => {
     res.redirect('/auth?success=Account%20created%20successfully!%20Please%20login%20now.');
   } catch (err) {
     console.error('Signup error:', err);
-    res.redirect('/auth?error=Something went wrong. Please try again.');
+    res.redirect('/auth?signup=1&error=Something went wrong. Please try again.');
   }
 });
 

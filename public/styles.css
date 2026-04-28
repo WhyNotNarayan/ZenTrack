@@ -263,6 +263,10 @@ body {
   animation: slideDown 0.4s ease-out;
 }
 
+.alert-success {
+  background: #22c55e !important;
+}
+
 @keyframes slideDown {
   from { top: -50px; opacity: 0; }
   to { top: 20px; opacity: 1; }

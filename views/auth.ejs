@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <title>ZenTrack | Join the Community</title>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://accounts.google.com/gsi/client" onload="onGoogleLibraryLoad()" async defer></script>
   <script>
     // Auto-flip to signup if ?signup param is present
     window.addEventListener('DOMContentLoaded', () => {
@@ -75,7 +75,7 @@
             <div id="google-login-btn"></div>
 
             <div class="footer">
-              New here? <a href="#" class="flip-to-signup">Create an account</a>
+              New here? <a href="/auth?signup=1" class="flip-to-signup">Create an account</a>
             </div>
           </div>
 
@@ -117,7 +117,7 @@
             <div id="google-signup-btn"></div>
 
             <div class="footer">
-              Already a member? <a href="#" class="flip-to-login">Login</a>
+              Already a member? <a href="/auth" class="flip-to-login">Login</a>
             </div>
           </div>
 
