@@ -292,39 +292,8 @@ app.get('/history', isAuthenticated, async (req, res) => {
   });
 });
 
-// Google auth
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || 'dummy');
-app.post('/auth/google', async (req, res) => {
-  const { idToken } = req.body;
-  try {
-    const ticket = await googleClient.verifyIdToken({
-      idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-    const payload = ticket.getPayload();
-    const { email, name, picture, sub: googleId } = payload;
-    let user = await User.findOne({ email });
-    if (!user) {
-      user = new User({
-        email,
-        username: name?.replace(/\s+/g, '').toLowerCase() || email.split('@')[0],
-        password: 'google-auth-no-password',
-        mobile: '',
-        isFirstLogin: true,
-        googleId,
-        profilePic: picture
-      });
-      await user.save();
-    }
-    req.login(user, (err) => {
-      if (err) return res.status(500).json({ success: false });
-      res.json({ success: true, redirectUrl: '/' });
-    });
-  } catch (error) {
-    console.error('Google auth error:', error);
-    res.status(401).json({ success: false, error: 'Invalid token' });
-  }
-});
+
+
 
 // Web Push
 const webpush = require('web-push');
