@@ -1,4 +1,4 @@
-Live Link:-https://zentrack-pvdc.onrender.com
+Live Link:-https://zen-track-livid.vercel.app/
 ---
 
 # 🌿 ZenTrack – Daily Habit & Goal Tracker
