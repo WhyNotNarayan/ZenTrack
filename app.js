@@ -141,8 +141,19 @@ app.get('/toggle-theme', isAuthenticated, (req, res) => {
   res.redirect(req.headers.referer || '/');
 });
 
-// Home route
-app.get('/', isAuthenticated, async (req, res) => {
+
+// Landing page — public, shown to guests
+app.get('/home', (req, res) => {
+  if (req.isAuthenticated()) return res.redirect('/');
+  res.render('home');
+});
+
+// Redirect root: guests → landing, logged-in → tracker
+app.get('/', (req, res, next) => {
+  if (!req.isAuthenticated()) return res.redirect('/home');
+  next();
+}, async (req, res) => {
+
   const today = moment().startOf('day').toDate();
   const currentMonth = moment().startOf('month');
   const monthEnd = moment().endOf('month');
