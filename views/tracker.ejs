@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="/dashboard.css">
+  <link rel="stylesheet" href="/dashboard.css?v=2">
   <title>ZenTrack - Monthly Tracker</title>
 </head>
 <body class="dashboard-body">
@@ -301,14 +301,16 @@
       })();
     <% } %>
 
-    let currentGuideStep = 1;
-    function showStep(step) {
-      currentGuideStep = step;
+    window.currentGuideStep = 1;
+    window.showStep = function(step) {
+      window.currentGuideStep = step;
       document.querySelectorAll('.guide-step').forEach(el => el.style.display = 'none');
-      document.getElementById(`step-${step}`).style.display = 'block';
-    }
-    function nextStep(step) { showStep(step); }
-    function prevStep(step) { showStep(step); }
+      const nextEl = document.getElementById(`step-${step}`);
+      if (nextEl) nextEl.style.display = 'block';
+      else console.warn(`Step ${step} not found`);
+    };
+    window.nextStep = function(step) { window.showStep(step); };
+    window.prevStep = function(step) { window.showStep(step); };
     function skipGuide() { finishGuide(true); }
     function finishGuide(silent = false) {
       document.getElementById('onboarding-guide').style.display = 'none';

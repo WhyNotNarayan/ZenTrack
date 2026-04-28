@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="/styles.css?v=2">
+  <link rel="stylesheet" href="/styles.css?v=3">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <title>ZenTrack | Join the Community</title>
   <script src="https://accounts.google.com/gsi/client" onload="onGoogleLibraryLoad()" async defer></script>
@@ -187,35 +187,6 @@
           });
         } catch(e) { console.warn('Flip card error:', e); }
 
-        // Eye Movement - isolated
-        try {
-          document.addEventListener('mousemove', (e) => {
-            document.querySelectorAll('.pupil').forEach(pupil => {
-              try {
-                const rect = pupil.parentElement.getBoundingClientRect();
-                const centerX = rect.left + rect.width / 2;
-                const centerY = rect.top + rect.height / 2;
-                const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
-                const moveX = Math.cos(angle) * 10;
-                const moveY = Math.sin(angle) * 10;
-                pupil.style.transform = `translate(${moveX}px, ${moveY}px)`;
-              } catch(ex) {}
-            });
-          });
-        } catch(e) { console.warn('Eye movement error:', e); }
-
-        // Eye Close on Password - isolated
-        try {
-          document.querySelectorAll('.password-field').forEach(field => {
-            field.addEventListener('focus', () => {
-              document.querySelectorAll('.eye').forEach(eye => eye.classList.add('closed'));
-            });
-            field.addEventListener('blur', () => {
-              document.querySelectorAll('.eye').forEach(eye => eye.classList.remove('closed'));
-            });
-          });
-        } catch(e) { console.warn('Eye close error:', e); }
-
         // Error Alert Auto-hide
         try {
           const errorAlert = document.getElementById('authError');
@@ -231,6 +202,39 @@
             setTimeout(() => el.remove(), 5000);
           } catch(e) {}
         }
+      </script>
+
+      <!-- ISOLATED: Eye Animation - independent from all other JS -->
+      <script>
+        (function() {
+          try {
+            document.addEventListener('mousemove', (e) => {
+              var pupils = document.querySelectorAll('.pupil');
+              for(var i=0; i<pupils.length; i++) {
+                try {
+                  var p = pupils[i];
+                  var rect = p.parentElement.getBoundingClientRect();
+                  var cx = rect.left + rect.width / 2;
+                  var cy = rect.top + rect.height / 2;
+                  var angle = Math.atan2(e.clientY - cy, e.clientX - cx);
+                  var mx = Math.cos(angle) * 10;
+                  var my = Math.sin(angle) * 10;
+                  p.style.transform = 'translate(' + mx + 'px, ' + my + 'px)';
+                } catch(err) {}
+              }
+            });
+
+            // Eye Close logic
+            document.querySelectorAll('.password-field').forEach(function(f) {
+              f.addEventListener('focus', function() {
+                document.querySelectorAll('.eye').forEach(function(e) { e.classList.add('closed'); });
+              });
+              f.addEventListener('blur', function() {
+                document.querySelectorAll('.eye').forEach(function(e) { e.classList.remove('closed'); });
+              });
+            });
+          } catch(e) { console.error('Isolated Eye Error:', e); }
+        })();
       </script>
 
       <!-- ISOLATED: Mobile validation - independent from all other JS -->
