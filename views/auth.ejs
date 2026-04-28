@@ -217,10 +217,26 @@
 
         // Mobile Number Validation
         const mobileInput = document.getElementById('mobileInput');
-        if (mobileInput) {
-          mobileInput.addEventListener('input', (e) => {
-            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
-          });
+        const signupForm = document.getElementById('signupForm');
+        const signupBtn = signupForm ? signupForm.querySelector('.btn-submit') : null;
+
+        if (mobileInput && signupBtn) {
+          const validateMobile = () => {
+            const val = mobileInput.value.replace(/\D/g, '');
+            mobileInput.value = val.slice(0, 10);
+            if (mobileInput.value.length === 10) {
+              signupBtn.disabled = false;
+              signupBtn.style.opacity = '1';
+              signupBtn.style.cursor = 'pointer';
+            } else {
+              signupBtn.disabled = true;
+              signupBtn.style.opacity = '0.5';
+              signupBtn.style.cursor = 'not-allowed';
+            }
+          };
+          mobileInput.addEventListener('input', validateMobile);
+          // Run once on load to set initial state
+          validateMobile();
         }
 
         // Error Alert Auto-hide
