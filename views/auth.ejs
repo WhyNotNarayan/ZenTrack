@@ -109,7 +109,7 @@
                 <input type="tel" name="mobile" id="mobileInput" placeholder="10-digit Mobile Number"
                   pattern="[0-9]{10}" minlength="10" maxlength="10" required title="Please enter exactly 10 digits">
               </div>
-              <button type="submit" class="btn-submit" id="levelUpBtn" disabled>Level Up</button>
+              <button type="submit" class="btn-submit" id="levelUpBtn">Level Up</button>
             </form>
 
             <div class="divider"><span>OR</span></div>
@@ -214,28 +214,8 @@
           });
         });
 
-        // Mobile Number Validation — strict 10-digit only
-        const mobileInput = document.getElementById('mobileInput');
-        const levelUpBtn = document.getElementById('levelUpBtn');
+        // Mobile validation moved to isolated script block below
 
-        if (mobileInput && levelUpBtn) {
-          const validateMobile = () => {
-            // Strip non-digits and cap at 10
-            mobileInput.value = mobileInput.value.replace(/\D/g, '').slice(0, 10);
-            if (mobileInput.value.length === 10) {
-              levelUpBtn.disabled = false;
-              levelUpBtn.style.opacity = '1';
-              levelUpBtn.style.cursor = 'pointer';
-            } else {
-              levelUpBtn.disabled = true;
-              levelUpBtn.style.opacity = '0.5';
-              levelUpBtn.style.cursor = 'not-allowed';
-            }
-          };
-          mobileInput.addEventListener('input', validateMobile);
-          mobileInput.addEventListener('keyup', validateMobile);
-          mobileInput.addEventListener('paste', () => setTimeout(validateMobile, 10));
-        }
 
         // Error Alert Auto-hide
         const errorAlert = document.getElementById('authError');
@@ -253,6 +233,36 @@
           setTimeout(() => alert.remove(), 5000);
         }
       </script>
+
+      <!-- ISOLATED: Mobile validation - independent from all other JS -->
+      <script>
+        (function () {
+          try {
+            var mob = document.getElementById('mobileInput');
+            var btn = document.getElementById('levelUpBtn');
+            if (!mob || !btn) return;
+
+            // Start locked
+            btn.disabled = true;
+
+            function check() {
+              mob.value = mob.value.replace(/[^0-9]/g, '').substring(0, 10);
+              var ok = mob.value.length === 10;
+              btn.disabled = !ok;
+              btn.style.opacity = ok ? '1' : '0.5';
+              btn.style.cursor = ok ? 'pointer' : 'not-allowed';
+            }
+
+            mob.addEventListener('input', check);
+            mob.addEventListener('keyup', check);
+            mob.addEventListener('paste', function () { setTimeout(check, 20); });
+          } catch (e) {
+            var b = document.getElementById('levelUpBtn');
+            if (b) b.disabled = false;
+          }
+        })();
+      </script>
+
 </body>
 
 </html>
