@@ -2,7 +2,7 @@
   "version": 2,
   "functions": {
     "api/index.js": {
-      "includeFiles": "views/**,public/**,app.js,models/**"
+      "includeFiles": "views/**,public/**,models/**"
     }
   },
   "rewrites": [

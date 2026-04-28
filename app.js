@@ -1,6 +1,4 @@
-require('dotenv').config(); // ✅ .env support
-
-require('dotenv').config(); // ✅ .env support
+require('dotenv').config();
 
 const express = require('express');
 const path = require('path');
@@ -8,82 +6,57 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const moment = require('moment');
 const passport = require('passport');
-let OAuth2Client;
-try {
-  const googleAuth = require('google-auth-library');
-  OAuth2Client = googleAuth.OAuth2Client;
-} catch (e) {
-  console.error("⚠️ Google Auth Library failed to load, using mock for stability:", e.message);
-  OAuth2Client = class { constructor() { console.log("Mock OAuth2Client active"); } };
-}
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcryptjs');
 const session = require('express-session');
-
-// Prevent crashes on Vercel
-process.on('uncaughtException', (err) => {
-  console.error('🔥 UNCAUGHT EXCEPTION:', err);
-});
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('🔥 UNHANDLED REJECTION:', reason);
-});
-
 const MongoStore = require('connect-mongo');
+
+// Models
 const Goal = require('./models/Goal');
 const DailyTrack = require('./models/DailyTrack');
 const User = require('./models/User');
 const PushSubscription = require('./models/PushSubscription');
-const requiredEnvs = ['MONGO_URI', 'SESSION_SECRET', 'GOOGLE_CLIENT_ID'];
-requiredEnvs.forEach(v => {
-  if (!process.env[v]) {
-    console.error(`❌ CRITICAL ERROR: Environment variable ${v} is missing!`);
-    if (process.env.VERCEL) {
-       console.error("Please add this key in Vercel Project Settings > Environment Variables");
-    }
-  }
+
+// Prevent crashes on Vercel
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION:', err.message);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('UNHANDLED REJECTION:', reason);
 });
 
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || 'dummy-id');
+// Resilient Google Auth loading
+let OAuth2Client;
+try {
+  OAuth2Client = require('google-auth-library').OAuth2Client;
+  console.log('Google Auth library loaded OK');
+} catch (e) {
+  console.error('Google Auth library failed to load:', e.message);
+  OAuth2Client = class {
+    constructor() {}
+    async verifyIdToken() { throw new Error('Google Auth not available'); }
+  };
+}
 
 const app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json()); 
+app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Keep-alive logic only for non-Vercel environments (like Render)
-if (!process.env.VERCEL) {
-  app.get('/ping', (req, res) => res.send('pong'));
-  
-  setInterval(() => {
-    const host = process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || 3000}`;
-    fetch(`${host}/ping`)
-      .then(() => console.log('Self-ping success'))
-      .catch(err => console.log('Self-ping failed:', err.message));
-  }, 10 * 60 * 1000);
-}
-
-
 // Connect to MongoDB
-console.log('⏳ Attempting to connect to MongoDB...');
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ DATABASE CONNECTED SUCCESSFULLY'))
-  .catch(err => {
-    console.error('❌ MONGODB CONNECTION ERROR:');
-    console.error(err.message);
-    if (err.message.includes('IP not whitelisted')) {
-       console.error("TIP: You need to allow '0.0.0.0/0' (all IPs) in your MongoDB Atlas Network Access settings!");
-    }
-  });
+  .then(() => console.log('DATABASE CONNECTED'))
+  .catch(err => console.error('MONGODB ERROR:', err.message));
 
 // Session config
 app.use(session({
   secret: process.env.SESSION_SECRET || 'fallback-secret',
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({ 
-    mongoUrl: process.env.MONGO_URI || 'mongodb://localhost:27017/zentrack' 
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI || 'mongodb://localhost:27017/zentrack'
   })
 }));
 
@@ -98,10 +71,8 @@ passport.use(new LocalStrategy({
   try {
     const user = await User.findOne({ email });
     if (!user) return done(null, false, { message: 'Incorrect email' });
-
     const match = await bcrypt.compare(password, user.password);
     if (!match) return done(null, false, { message: 'Incorrect password' });
-
     return done(null, user);
   } catch (err) {
     return done(err);
@@ -116,64 +87,37 @@ passport.deserializeUser(async (id, done) => {
   } catch (err) { done(err); }
 });
 
-// Middleware to check authentication
 function isAuthenticated(req, res, next) {
   if (req.isAuthenticated()) return next();
-  res.redirect('/login');
+  res.redirect('/auth');
 }
 
-// initDailyTracks removed for better performance. Tracks are now created on-demand.
-
-// Auth page (combined login/signup)
+// Auth page
 app.get('/auth', (req, res) => {
-  res.render('auth', { 
+  res.render('auth', {
     error: req.session.messages ? req.session.messages[0] : null,
-    googleClientId: process.env.GOOGLE_CLIENT_ID 
+    googleClientId: process.env.GOOGLE_CLIENT_ID
   });
 });
 
 // Signup
-// Signup
 app.post('/signup', async (req, res) => {
   try {
     const { email, username, password, mobile } = req.body;
-
-    // ─── Mobile number validation ─────────────────────────────────────────────
     if (!mobile || typeof mobile !== 'string') {
       return res.redirect('/auth?error=Mobile number is required');
     }
-
-    // Remove everything that is not a digit (spaces, -, +, etc.)
     const cleanedMobile = mobile.replace(/\D/g, '');
-
-    // Must be EXACTLY 10 digits
     if (cleanedMobile.length !== 10) {
-      return res.redirect('/auth?error=Mobile number must be exactly 10 digits (no more, no less)');
+      return res.redirect('/auth?error=Mobile number must be exactly 10 digits');
     }
-
-    // Optional: Check if it starts with valid Indian mobile prefix (6,7,8,9)
-    // if (!['6','7','8','9'].includes(cleanedMobile[0])) {
-    //   return res.redirect('/auth?error=Please enter a valid 10-digit Indian mobile number');
-    // }
-
-    // ──────────────────────────────────────────────────────────────────────────
-
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
       return res.redirect('/auth?error=Email or username already exists');
     }
-
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ 
-      email, 
-      username, 
-      password: hashedPassword, 
-      mobile: cleanedMobile   // save only digits, cleaned version
-    });
-
+    const newUser = new User({ email, username, password: hashedPassword, mobile: cleanedMobile });
     await newUser.save();
-
-    // Optional: success message
     res.redirect('/auth?success=Account created successfully! Please login now.');
   } catch (err) {
     console.error('Signup error:', err);
@@ -188,7 +132,6 @@ app.post('/login', passport.authenticate('local', {
   failureMessage: true
 }));
 
-// Redirect old /login and /signup to /auth
 app.get('/login', (req, res) => res.redirect('/auth'));
 app.get('/signup', (req, res) => res.redirect('/auth'));
 
@@ -196,23 +139,18 @@ app.get('/signup', (req, res) => res.redirect('/auth'));
 app.get('/logout', (req, res, next) => {
   req.logout((err) => {
     if (err) return next(err);
-    res.redirect('/login');
+    res.redirect('/auth');
   });
 });
 
-// Theme middleware (only once)
+// Theme middleware
 app.use((req, res, next) => {
-  if (req.session) {
-    req.session.theme = req.session.theme || 'light';
-  }
+  if (req.session) req.session.theme = req.session.theme || 'light';
   next();
 });
 
-// Toggle theme
 app.get('/toggle-theme', isAuthenticated, (req, res) => {
-  if (req.session) {
-    req.session.theme = req.session.theme === 'light' ? 'dark' : 'light';
-  }
+  if (req.session) req.session.theme = req.session.theme === 'light' ? 'dark' : 'light';
   res.redirect(req.headers.referer || '/');
 });
 
@@ -223,84 +161,56 @@ app.get('/', isAuthenticated, async (req, res) => {
   const monthEnd = moment().endOf('month');
 
   const goals = await Goal.find({ user: req.user._id });
-  const tracks = await DailyTrack.find({ 
+  const tracks = await DailyTrack.find({
     user: req.user._id,
     date: { $gte: currentMonth.toDate(), $lte: monthEnd.toDate() }
   });
+
   const dates = [];
   for (let d = currentMonth.clone(); d.isSameOrBefore(monthEnd, 'day'); d.add(1, 'day')) {
     dates.push(d.toDate());
   }
 
-  // Completion % for circle chart
   const totalPossible = goals.length * dates.length;
   const completed = tracks.filter(t => t.completed).length;
   const progress = totalPossible > 0 ? (completed / totalPossible) * 100 : 0;
-
   const isPast = (date) => moment(date).isBefore(moment().startOf('day'));
 
-  // Removed initDailyTracks - dynamic creation on interaction is faster
+  const data = [{
+    label: 'Goal Completion',
+    data: dates.map(date => {
+      const tracksForDate = tracks.filter(t => moment(t.date).isSame(date, 'day'));
+      return tracksForDate.filter(t => t.completed).length;
+    }),
+    borderColor: '#6366f1',
+    backgroundColor: 'rgba(99, 102, 241, 0.2)',
+    fill: true
+  }];
 
-  const data = [
-    {
-      label: 'Goal Completion',
-      data: dates.map(date => {
-        const tracksForDate = tracks.filter(t => moment(t.date).isSame(date, 'day'));
-        const completedTracks = tracksForDate.filter(t => t.completed).length;
-        return completedTracks;
-      }),
-      borderColor: '#6366f1',
-      backgroundColor: 'rgba(99, 102, 241, 0.2)',
-      fill: true
-    }
-  ];
-
-  // ─── FIXED & SAFE GUIDE LOGIC ────────────────────────────────────────────
   const showGuide = req.user.isFirstLogin !== false;
-
   if (showGuide) {
-    console.log(`[Guide] Showing tour for ${req.user.email || req.user.username} — isFirstLogin was: ${req.user.isFirstLogin}`);
-    
     req.user.isFirstLogin = false;
     await req.user.save();
-    
-    console.log(`[Guide] isFirstLogin updated to false`);
-  } else {
-    console.log(`[Guide] Skipped — isFirstLogin = ${req.user.isFirstLogin}`);
   }
-  // ──────────────────────────────────────────────────────────────────────────
 
   res.render('tracker', {
-    goals,
-    tracks,
-    date: today,
-    moment,
-    isPast,
-    user: req.user,
-    theme: req.session.theme,
+    goals, tracks, date: today, moment, isPast,
+    user: req.user, theme: req.session.theme,
     currentMonth: currentMonth.format('MMMM YYYY'),
-    dates,
-    progress: JSON.stringify(progress),
-    data,
-    showGuide
+    dates, progress: JSON.stringify(progress), data, showGuide
   });
 });
 
-// Manage Goals page
+// Goals page
 app.get('/goals', isAuthenticated, async (req, res) => {
   const goals = await Goal.find({ user: req.user._id });
   res.render('goals', { goals, user: req.user, theme: req.session.theme });
 });
 
-// Add a new goal
 app.post('/goals', isAuthenticated, async (req, res) => {
   const { name, time } = req.body;
   const goal = await new Goal({ name, time, user: req.user._id }).save();
-  
-  if (req.xhr || req.headers.accept.indexOf('json') > -1) {
-    return res.json({ success: true, goal });
-  }
-  
+  if (req.xhr || req.headers.accept.indexOf('json') > -1) return res.json({ success: true, goal });
   res.redirect('/goals');
 });
 
@@ -308,137 +218,93 @@ app.post('/goals/delete/:id', isAuthenticated, async (req, res) => {
   try {
     const goalId = req.params.id;
     await Goal.findByIdAndDelete(goalId);
-    
-    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
-      return res.json({ success: true, id: goalId });
-    }
-    
+    if (req.xhr || req.headers.accept.indexOf('json') > -1) return res.json({ success: true, id: goalId });
     res.redirect('/goals');
   } catch (err) {
     console.error(err);
-    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
-      return res.status(500).json({ error: 'Error deleting goal' });
-    }
+    if (req.xhr || req.headers.accept.indexOf('json') > -1) return res.status(500).json({ error: 'Error deleting goal' });
     res.status(500).send('Error deleting goal');
   }
 });
 
-// Route to render the edit goal page
 app.get('/goals/edit/:id', isAuthenticated, async (req, res) => {
   try {
-    const goalId = req.params.id;
-    const goal = await Goal.findById(goalId);
-    if (!goal) {
-      return res.status(404).send('Goal not found');
-    }
+    const goal = await Goal.findById(req.params.id);
+    if (!goal) return res.status(404).send('Goal not found');
     res.render('editgoal', { goal, user: req.user, theme: req.session.theme });
   } catch (err) {
-    console.error(err);
     res.status(500).send('Error retrieving goal');
   }
 });
 
-// Route to handle the edit goal form submission
 app.post('/goals/edit/:id', isAuthenticated, async (req, res) => {
   try {
-    const goalId = req.params.id;
     const { name, time } = req.body;
-    await Goal.findByIdAndUpdate(goalId, { name, time });
+    await Goal.findByIdAndUpdate(req.params.id, { name, time });
     res.redirect('/goals');
   } catch (err) {
-    console.error(err);
     res.status(500).send('Error updating goal');
   }
 });
 
-//checkbox post/tracker
+// Tracker checkbox
 app.post('/tracker', isAuthenticated, async (req, res) => {
   const { date: selectedDate, goalId, completed } = req.body;
   const trackDate = moment(selectedDate || moment().format('YYYY-MM-DD')).startOf('day').toDate();
-
-  // Allow saving for today and the past day
-  if (moment(trackDate).isBefore(moment().subtract(1, 'day').startOf('day'))) {
-    return res.redirect('/');
-  }
-
+  if (moment(trackDate).isBefore(moment().subtract(1, 'day').startOf('day'))) return res.redirect('/');
   await DailyTrack.findOneAndUpdate(
     { date: trackDate, goal: goalId, user: req.user._id },
     { completed: completed === 'on' || completed === true },
     { upsert: true }
   );
-
-  if (req.xhr || req.headers.accept.indexOf('json') > -1) {
-    return res.json({ success: true });
-  }
-
+  if (req.xhr || req.headers.accept.indexOf('json') > -1) return res.json({ success: true });
   res.redirect('/');
 });
 
-// Analytics route
+// Analytics
 app.get('/analytics', isAuthenticated, async (req, res) => {
   const goals = await Goal.find({ user: req.user._id });
   const tracks = await DailyTrack.find({ user: req.user._id });
-
-  // Get unique dates from tracks
   const dates = [...new Set(tracks.map(t => moment(t.date).format('YYYY-MM-DD')))].sort();
-
-  // Calculate % completion per day (for line and bar - growth)
   const dataValues = dates.map(date => {
     const tracksForDate = tracks.filter(t => moment(t.date).format('YYYY-MM-DD') === date);
     const completedForDate = tracksForDate.filter(t => t.completed).length;
-    const percent = goals.length > 0 ? (completedForDate / goals.length * 100) : 0;
-    return percent.toFixed(2); // % per day
+    return goals.length > 0 ? (completedForDate / goals.length * 100).toFixed(2) : 0;
   });
-
-  // Overall completed and not completed (for pie)
   const completedCount = tracks.filter(t => t.completed).length;
   const notCompletedCount = tracks.length - completedCount;
-
   res.render('analytics', {
-    dates: JSON.stringify(dates),
-    dataValues: JSON.stringify(dataValues),
-    completedCount,
-    notCompletedCount,
-    user: req.user,
-    theme: req.session.theme
+    dates: JSON.stringify(dates), dataValues: JSON.stringify(dataValues),
+    completedCount, notCompletedCount, user: req.user, theme: req.session.theme
   });
 });
 
-// History route
+// History
 app.get('/history', isAuthenticated, async (req, res) => {
   const selectedMonth = req.query.month || moment().format('YYYY-MM');
   const monthStart = moment(selectedMonth, 'YYYY-MM').startOf('month');
   const monthEnd = moment(selectedMonth, 'YYYY-MM').endOf('month');
-
   const goals = await Goal.find({ user: req.user._id });
-  const tracks = await DailyTrack.find({ 
+  const tracks = await DailyTrack.find({
     user: req.user._id,
     date: { $gte: monthStart.toDate(), $lte: monthEnd.toDate() }
   });
-
   const dates = [];
   for (let d = monthStart.clone(); d.isSameOrBefore(monthEnd, 'day'); d.add(1, 'day')) {
     dates.push(d.toDate());
   }
-
   const isPast = (date) => moment(date).isBefore(moment().startOf('day'));
-
   res.render('history', {
-    goals,
-    tracks,
-    moment,
-    isPast,
-    user: req.user,
-    theme: req.session.theme,
-    selectedMonth: selectedMonth,
-    displayMonth: monthStart.format('MMMM YYYY'),
-    dates
+    goals, tracks, moment, isPast, user: req.user,
+    theme: req.session.theme, selectedMonth,
+    displayMonth: monthStart.format('MMMM YYYY'), dates
   });
 });
 
+// Google auth
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || 'dummy');
 app.post('/auth/google', async (req, res) => {
   const { idToken } = req.body;
-
   try {
     const ticket = await googleClient.verifyIdToken({
       idToken,
@@ -446,22 +312,19 @@ app.post('/auth/google', async (req, res) => {
     });
     const payload = ticket.getPayload();
     const { email, name, picture, sub: googleId } = payload;
-
     let user = await User.findOne({ email });
-
     if (!user) {
       user = new User({
         email,
         username: name?.replace(/\s+/g, '').toLowerCase() || email.split('@')[0],
         password: 'google-auth-no-password',
-        mobile: '', 
+        mobile: '',
         isFirstLogin: true,
         googleId,
         profilePic: picture
       });
       await user.save();
     }
-
     req.login(user, (err) => {
       if (err) return res.status(500).json({ success: false });
       res.json({ success: true, redirectUrl: '/' });
@@ -472,96 +335,62 @@ app.post('/auth/google', async (req, res) => {
   }
 });
 
-// Web Push Notifications
+// Web Push
 const webpush = require('web-push');
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    'mailto:zentrack@example.com',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+}
 
-webpush.setVapidDetails(
-  'mailto:your-email@example.com',
-  process.env.VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-);
-
-// ─── Send notification to all valid subscriptions from DB ──────────────────────
 async function sendNotification(title, body) {
   try {
     const allSubs = await PushSubscription.find({}).lean();
-
-    if (allSubs.length === 0) {
-      console.log('[PUSH] No subscriptions found in database');
-      return;
-    }
-
-    console.log(`[PUSH] Attempting to send "${title}" to ${allSubs.length} subscriptions`);
-
     for (const doc of allSubs) {
-      const sub = doc.subscription;
       try {
-        await webpush.sendNotification(
-          sub,
-          JSON.stringify({ title, body })
-        );
-        console.log(`[PUSH] Successfully sent "${title}" to user ${doc.user}`);
+        await webpush.sendNotification(doc.subscription, JSON.stringify({ title, body }));
       } catch (err) {
-        console.error(`[PUSH] Failed to send to user ${doc.user}:`, err.message || err);
-        
-        // Clean up invalid/expired subscriptions
         if (err.statusCode === 410 || err.statusCode === 404) {
           await PushSubscription.deleteOne({ _id: doc._id });
-          console.log(`[PUSH] Removed expired/gone subscription for user ${doc.user}`);
         }
       }
     }
   } catch (err) {
-    console.error('[PUSH] Error fetching or sending notifications:', err);
+    console.error('PUSH ERROR:', err);
   }
 }
 
 if (!process.env.VERCEL) {
   const cron = require('node-cron');
-  // Morning reminder at 7:00 AM IST
-  cron.schedule('0 7 * * *', () => {
-    console.log('[CRON] Running morning reminder');
-    sendNotification("ZenTrack Reminder 🌞", "Good morning! Don’t forget to mark your goals today.");
-  }, { timezone: "Asia/Kolkata" });
-
-  // Night reminder at 10:00 PM IST
-  cron.schedule('0 22 * * *', () => {
-    console.log('[CRON] Running night reminder');
-    sendNotification("ZenTrack Reminder 🌙", "Day’s ending — check your progress before bed.");
-  }, { timezone: "Asia/Kolkata" });
+  cron.schedule('0 7 * * *', () => sendNotification('ZenTrack Reminder', 'Good morning! Mark your goals today.'), { timezone: 'Asia/Kolkata' });
+  cron.schedule('0 22 * * *', () => sendNotification('ZenTrack Reminder', "Day's ending — check your progress."), { timezone: 'Asia/Kolkata' });
 }
 
-// ─── Subscribe endpoint ────────────────────────────────────────────────────────
 app.post('/subscribe', isAuthenticated, async (req, res) => {
   try {
     const subscription = req.body;
-
-    if (!subscription || !subscription.endpoint) {
-      return res.status(400).json({ error: 'Invalid subscription object' });
-    }
-
+    if (!subscription || !subscription.endpoint) return res.status(400).json({ error: 'Invalid subscription' });
     await PushSubscription.findOneAndUpdate(
       { user: req.user._id },
       { subscription, createdAt: new Date() },
       { upsert: true, new: true }
     );
-
-    console.log(`[PUSH] Subscription saved/updated for user ${req.user._id}`);
     res.status(201).json({ success: true });
   } catch (err) {
-    console.error('[PUSH] Save subscription error:', err);
+    console.error('Subscribe error:', err);
     res.status(500).json({ error: 'Failed to save subscription' });
   }
 });
 
-// Server listen
+// Export for Vercel
 module.exports = app;
 
-// Only start the server if NOT running on Vercel
+// Local server (NOT on Vercel)
 if (!process.env.VERCEL) {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
-    console.log(`🚀 Server running locally at http://localhost:${PORT}`);
-    console.log(`Current server time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`);
+    console.log(`Server running at http://localhost:${PORT}`);
   });
 }
